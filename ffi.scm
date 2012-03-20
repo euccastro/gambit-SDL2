@@ -36,8 +36,8 @@
               (interval 0 nb-names)
               names))))
 
-(define-macro 
-  (c-struct type . fields)
+(at-expand-time
+  (define (c-native struct-or-union type . fields)
   (let* 
     ((typename (symbol->string type))
      (accessor 
@@ -45,7 +45,10 @@
          (let* ((symbol (car field))
                 (attr-name (symbol->string symbol))
                 (attr-type (cadr field))
-                (voidstar (if (caddr field) "_voidstar" "")))
+                (voidstar (if (and (not (null? (cddr field)))
+                                   (caddr field))
+                            "_voidstar" 
+                            "")))
            `(define ,(string->symbol (string-append typename "-" attr-name))
               (c-lambda (,type) ,attr-type
                         ,(string-append
@@ -61,7 +64,10 @@
          (let* ((symbol (car field))
                 (attr-name (symbol->string symbol))
                 (attr-type (cadr field))
-                (voidstar (if (caddr field) "_voidstar" "")))
+                (voidstar (if (and (not (null? (cddr field)))
+                                   (caddr field))
+                            "_voidstar" 
+                            "")))
            `(define ,(string->symbol
                        (string-append typename "-" attr-name "-set!"))
               (c-lambda (,type ,attr-type) void
@@ -76,6 +82,7 @@
     (append
       `(begin
          ; Constructor
+         (c-define-type ,type (,struct-or-union ,typename))
          (define ,(string->symbol (string-append "make-" typename))
            (c-lambda () ,type
                      ,(string-append
@@ -85,4 +92,12 @@
            (c-lambda (,type) (pointer ,type)
                      "___result_voidstar = ___arg1_voidstar;")))
       (map accessor fields)
-      (map mutator fields))))
+      (map mutator fields)))))
+
+(define-macro 
+  (c-struct type . fields)
+  (apply c-native 'struct type fields))
+
+(define-macro
+  (c-union type . fields)
+  (apply c-native 'union type fields))

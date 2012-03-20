@@ -4,9 +4,31 @@
 
 ; SDL
 
+(c-define-type SDL_EventType int)
 (c-define-type SDL_GLattr int)
 (c-define-type SDL_GLContext (pointer void))
 (c-define-type SDL_Window* (pointer "SDL_Window"))
+(c-define-type SDL_WindowEvent (struct "SDL_WindowEvent"))
+(c-struct SDL_WindowEvent
+  (type unsigned-int32)
+  (timestamp unsigned-int32)
+  (windowID unsigned-int32)
+  (event unsigned-int8)
+  (data1 int)
+  (data2 int))
+(c-define-type SDL_Keysym (struct "SDL_Keysym"))
+(c-struct SDL_Keysym
+  (
+(c-define-type SDL_TextEditingEvent (struct "SDL_TextEditingEvent"))
+(c-struct SDL_KeyboardEvent
+  (type unsigned-int32)
+  (timestamp unsigned-int32)
+  (windowID unsigned-int32)
+  (state unsigned-int8)
+  (repeat unsigned-int8)
+  (keysym SDL_Keysym void-star))
+
+
 (c-define-type SDL_WindowFlags int)
 
 (c-constants
@@ -51,7 +73,45 @@
   SDL_GL_CONTEXT_MAJOR_VERSION
   SDL_GL_CONTEXT_MINOR_VERSION
   SDL_GL_CONTEXT_FLAGS
-  SDL_GL_CONTEXT_PROFILE_MASK)
+  SDL_GL_CONTEXT_PROFILE_MASK
+  SDL_RELEASED
+  SDL_PRESSED
+  SDL_FIRSTEVENT
+  SDL_QUIT
+  SDL_WINDOWEVENT
+  SDL_SYSWMEVENT
+  SDL_KEYDOWN
+  SDL_KEYUP
+  SDL_TEXTEDITING
+  SDL_TEXTINPUT
+  SDL_MOUSEMOTION
+  SDL_MOUSEBUTTONDOWN
+  SDL_MOUSEBUTTONUP
+  SDL_MOUSEWHEEL
+  SDL_INPUTMOTION
+  SDL_INPUTBUTTONDOWN
+  SDL_INPUTBUTTONUP
+  SDL_INPUTWHEEL
+  SDL_INPUTPROXIMITYIN
+  SDL_INPUTPROXIMITYOUT
+  SDL_JOYAXISMOTION
+  SDL_JOYBALLMOTION
+  SDL_JOYHATMOTION
+  SDL_JOYBUTTONDOWN
+  SDL_JOYBUTTONUP
+  SDL_FINGERDOWN
+  SDL_FINGERUP
+  SDL_FINGERMOTION
+  SDL_TOUCHBUTTONDOWN
+  SDL_TOUCHBUTTONUP
+  SDL_DOLLARGESTURE
+  SDL_DOLLARRECORD
+  SDL_MULTIGESTURE
+  SDL_CLIPBOARDUPDATE
+  SDL_DROPFILE
+  SDL_USEREVENT
+  SDL_LASTEVENT
+  )
 
 (define SDL_CreateWindow
   (c-lambda (char-string int int int int unsigned-int32)

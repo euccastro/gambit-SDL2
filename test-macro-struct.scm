@@ -1,6 +1,6 @@
 ; Compile & test: 
-;   gsc -exe -o test-macro-struct -ld-options "-lm" test-macro-struct.scm
-;   ./test-macro-struct
+;   gsc -exe -o test-macro-struct~ -ld-options "-lm" test-macro-struct.scm
+;   ./test-macro-struct~
 
 (include "ffi.scm")
 
@@ -9,6 +9,8 @@
 #include <math.h>
 
 typedef struct {float x, y;} vec2;
+typedef struct {vec2 a, b;} segment;
+typedef union {vec2 v; segment s} vecseg;
 
 void normalize_vec2(vec2* v)
 {
@@ -17,23 +19,52 @@ void normalize_vec2(vec2* v)
     v->y /= length;
 }
 
+void translate_segment(segment* s, vec2* v)
+{
+    s->p1.x += v->x;
+    s->p1.y += v->y;
+    s->p2.x += v->x;
+    s->p2.y += v->y;
+}
+
 c-declare-end
 )
 
-(c-define-type vec2 (struct "vec2"))
-
-(c-struct vec2 (x float #f) (y float #f))
+(c-struct vec2 (x float) (y float))
+(c-struct segment (a vec2 voidstar) (b vec2 voidstar))
+(c-union vecseg (v vec2 voidstar) (s segment voidstar))
 
 (define vec2-normalize!
   (c-lambda ((pointer vec2)) void "normalize_vec2"))
 
+(define segment-translate!
+  (c-lambda ((pointer segment) (pointer vec2)) "translate_segment"))
+
 (define (test)
-  (letrec ((v (make-vec2))
-           (v* (vec2-pointer v)))
+  (let* ((v (make-vec2))
+         (v* (vec2-pointer v))
+         (s (make-segment))
+         (s* (segment-pointer s))
+         (sa (segment-a s))
+         (sa* (vec2-pointer sa))
+         (sb (segment-b s))
+         (vs (make-vecseg))
+         (vs* (segment-pointer vs))
+         (vsv (vecseg-v vs))
+         (vsv* (vec2-pointer vsv))
+         (vss (vecseg-s vs))
+         (vssa (segment-a vss))
+         (vssa* (vec2-pointer vssa)))
     (vec2-x-set! v 5.0)
     (vec2-y-set! v 10.0)
     (println "v has x=" (vec2-x v) " and y=" (vec2-y v) ".")
     (vec2-normalize! v*)
-    (println "v has x=" (vec2-x v) " and y=" (vec2-y v) ".")))
+    (println "v has x=" (vec2-x v) " and y=" (vec2-y v) ".")
+    (vec2-x-set! sa 1.0)
+    (vec2-y-set! sa 2.0)
+    (vec2-x-set! sb 3.0)
+    (vec2-y-set! sb 4.0)
+    (println "s si ((" (vec2-x sa) "," (vec2-y sa)
+             "), (" (vec2-x sb) "," (vec2-y sb) ").")))
 
 (test)
