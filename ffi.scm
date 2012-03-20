@@ -1,9 +1,14 @@
+; https://mercure.iro.umontreal.ca/pipermail/gambit-list/2009-August/003781.html
+(define-macro
+  (at-expand-time . expr)
+  (eval (cons 'begin expr)))
 
 ;; Creating the bindings in a simple C function makes for more compact
 ;; binaries, as per Marc Feeley's advice.
 ;;
 ;; https://mercure.iro.umontreal.ca/pipermail/gambit-list/2012-February/005688.html
 ;; (Via 'Alvaro Castro-Castilla).
+
 (define-macro
   (c-constants . names)
   (define (interval lo hi)
@@ -31,3 +36,53 @@
               (interval 0 nb-names)
               names))))
 
+(define-macro 
+  (c-struct type . fields)
+  (let* 
+    ((typename (symbol->string type))
+     (accessor 
+       (lambda (field)
+         (let* ((symbol (car field))
+                (attr-name (symbol->string symbol))
+                (attr-type (cadr field))
+                (voidstar (if (caddr field) "_voidstar" "")))
+           `(define ,(string->symbol (string-append typename "-" attr-name))
+              (c-lambda (,type) ,attr-type
+                        ,(string-append
+                           "___result" 
+                           voidstar 
+                           " = (("
+                           typename
+                           "*)___arg1_voidstar)->"
+                           attr-name
+                           ";"))))))
+     (mutator
+       (lambda (field)
+         (let* ((symbol (car field))
+                (attr-name (symbol->string symbol))
+                (attr-type (cadr field))
+                (voidstar (if (caddr field) "_voidstar" "")))
+           `(define ,(string->symbol
+                       (string-append typename "-" attr-name "-set!"))
+              (c-lambda (,type ,attr-type) void
+                        ,(string-append
+                           "((" 
+                           typename
+                           "*)___arg1_voidstar)->"
+                           attr-name
+                           " = ___arg2"
+                           voidstar 
+                           ";")))))))
+    (append
+      `(begin
+         ; Constructor
+         (define ,(string->symbol (string-append "make-" typename))
+           (c-lambda () ,type
+                     ,(string-append
+                       "___result_voidstar = "
+                       "___EXT(___alloc_rc)(sizeof(" typename "));")))
+         (define ,(string->symbol (string-append typename "-pointer"))
+           (c-lambda (,type) (pointer ,type)
+                     "___result_voidstar = ___arg1_voidstar;")))
+      (map accessor fields)
+      (map mutator fields))))
