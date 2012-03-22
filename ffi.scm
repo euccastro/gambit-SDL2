@@ -45,38 +45,42 @@
          (let* ((symbol (car field))
                 (attr-name (symbol->string symbol))
                 (attr-type (cadr field))
-                (voidstar (if (and (not (null? (cddr field)))
-                                   (caddr field))
-                            "_voidstar" 
-                            "")))
+                (is-voidstar (and (not (null? (cddr field)))
+                                   (caddr field)))
+                (voidstar (if is-voidstar "_voidstar" ""))
+                (amperstand (if is-voidstar "&" "")))
            `(define ,(string->symbol (string-append typename "-" attr-name))
               (c-lambda (,type) ,attr-type
                         ,(string-append
                            "___result" 
                            voidstar 
-                           " = (("
+                           " = "
+                           amperstand
+                           "((("
                            typename
                            "*)___arg1_voidstar)->"
                            attr-name
-                           ";"))))))
+                           ");"))))))
      (mutator
        (lambda (field)
          (let* ((symbol (car field))
                 (attr-name (symbol->string symbol))
                 (attr-type (cadr field))
-                (voidstar (if (and (not (null? (cddr field)))
-                                   (caddr field))
-                            "_voidstar" 
-                            "")))
+                (is-voidstar (and (not (null? (cddr field)))
+                                   (caddr field)))
+                (voidstar (if is-voidstar "_voidstar" ""))
+                (dereference (if is-voidstar (string-append "*(" (symbol->string attr-type) "*)") "")))
            `(define ,(string->symbol
                        (string-append typename "-" attr-name "-set!"))
               (c-lambda (,type ,attr-type) void
                         ,(string-append
-                           "((" 
+                           "(*(" 
                            typename
-                           "*)___arg1_voidstar)->"
+                           "*)___arg1_voidstar)."
                            attr-name
-                           " = ___arg2"
+                           " = "
+                           dereference
+                           "___arg2"
                            voidstar 
                            ";")))))))
     (append
