@@ -38,65 +38,75 @@
 
 (at-expand-time
   (define (c-native struct-or-union type . fields)
-  (let* 
-    ((typename (symbol->string type))
-     (accessor 
-       (lambda (field)
-         (let* ((symbol (car field))
-                (attr-name (symbol->string symbol))
-                (attr-type (cadr field))
-                (is-voidstar (and (not (null? (cddr field)))
-                                   (caddr field)))
-                (voidstar (if is-voidstar "_voidstar" ""))
-                (amperstand (if is-voidstar "&" "")))
-           `(define ,(string->symbol (string-append typename "-" attr-name))
-              (c-lambda (,type) ,attr-type
-                        ,(string-append
-                           "___result" 
-                           voidstar 
-                           " = "
-                           amperstand
-                           "((("
-                           typename
-                           "*)___arg1_voidstar)->"
-                           attr-name
-                           ");"))))))
-     (mutator
-       (lambda (field)
-         (let* ((symbol (car field))
-                (attr-name (symbol->string symbol))
-                (attr-type (cadr field))
-                (is-voidstar (and (not (null? (cddr field)))
-                                   (caddr field)))
-                (voidstar (if is-voidstar "_voidstar" ""))
-                (dereference (if is-voidstar (string-append "*(" (symbol->string attr-type) "*)") "")))
-           `(define ,(string->symbol
-                       (string-append typename "-" attr-name "-set!"))
-              (c-lambda (,type ,attr-type) void
-                        ,(string-append
-                           "(*(" 
-                           typename
-                           "*)___arg1_voidstar)."
-                           attr-name
-                           " = "
-                           dereference
-                           "___arg2"
-                           voidstar 
-                           ";")))))))
-    (append
-      `(begin
-         ; Constructor
-         (c-define-type ,type (,struct-or-union ,typename))
-         (define ,(string->symbol (string-append "make-" typename))
-           (c-lambda () ,type
-                     ,(string-append
-                       "___result_voidstar = "
-                       "___EXT(___alloc_rc)(sizeof(" typename "));")))
-         (define ,(string->symbol (string-append typename "-pointer"))
-           (c-lambda (,type) (pointer ,type)
-                     "___result_voidstar = ___arg1_voidstar;")))
-      (map accessor fields)
-      (map mutator fields)))))
+    (let* 
+      ((type-name (symbol->string type))
+       (attr-worker
+         (lambda (fn)
+           (lambda (field)
+             (let* ((attr-name (symbol->string (car field)))
+                    (attr-type (cadr field))
+                    (access-type (if (null? (cddr field)) 
+                                   'scalar 
+                                   (caddr field))))
+               (fn attr-name 
+                   attr-type 
+                   (eq? access-type 'voidstar)
+                   (eq? access-type 'pointer))))))
+       (accessor
+         (attr-worker
+           (lambda (attr-name attr-type voidstar pointer)
+             (let ((_voidstar (if (or voidstar pointer)
+                               "_voidstar" 
+                               ""))
+                   (amperstand (if voidstar "&" "")))
+               `(define ,(string->symbol 
+                           (string-append type-name "-" attr-name))
+                  (c-lambda (,type) ,attr-type
+                            ,(string-append
+                               "___result" 
+                               _voidstar 
+                               " = "
+                               amperstand
+                               "((("
+                               type-name
+                               "*)___arg1_voidstar)->"
+                               attr-name
+                               ");")))))))
+       (mutator
+         (attr-worker
+           (lambda (attr-name attr-type voidstar pointer)
+             (let ((_voidstar (if (or voidstar pointer) "_voidstar" ""))
+                   (dereference 
+                     (if voidstar
+                       (string-append "*(" (symbol->string attr-type) "*)")
+                       "")))
+             `(define ,(string->symbol
+                         (string-append type-name "-" attr-name "-set!"))
+                (c-lambda (,type ,attr-type) void
+                          ,(string-append
+                             "(*(" 
+                             type-name
+                             "*)___arg1_voidstar)."
+                             attr-name
+                             " = "
+                             dereference
+                             "___arg2"
+                             _voidstar 
+                             ";"))))))))
+      (append
+        `(begin
+           (c-define-type ,type (,struct-or-union ,type-name))
+           ; Constructor
+           (define ,(string->symbol (string-append "make-" type-name))
+             (c-lambda () ,type
+                       ,(string-append
+                          "___result_voidstar = "
+                          "___EXT(___alloc_rc)(sizeof(" type-name "));")))
+           (define ,(string->symbol (string-append type-name "-pointer"))
+             (c-lambda (,type) (pointer ,type)
+                       "___result_voidstar = ___arg1_voidstar;")))
+        (map accessor fields)
+        (map mutator fields)))))
 
 (define-macro 
   (c-struct type . fields)
