@@ -1,10 +1,11 @@
 ; https://mercure.iro.umontreal.ca/pipermail/gambit-list/2009-August/003781.html
-(define-macro (at-expand-time . expr)
-  (eval (cons 'begin expr)))
 (define-macro (at-expand-time-and-runtime . exprs)
   (let ((l `(begin ,@exprs)))
     (eval l)
     l))
+
+(define-macro (at-expand-time . expr)
+  (eval (cons 'begin expr)))
 
 ;; Creating the bindings in a simple C function makes for more compact
 ;; binaries, as per Marc Feeley's advice.
@@ -39,7 +40,7 @@
               (interval 0 nb-names)
               names))))
 
-(at-expand-time-and-runtime
+(at-expand-time
   (define (c-native struct-or-union type . fields)
     (let* 
       ((type-name (symbol->string type))
@@ -50,11 +51,16 @@
                     (attr-type (cadr field))
                     (access-type (if (null? (cddr field)) 
                                    'scalar 
-                                   (caddr field))))
+                                   (caddr field)))
+                    (voidstar (eq? access-type 'voidstar))
+                    (pointer (eq? access-type 'pointer)))
                (fn attr-name 
-                   attr-type 
-                   (eq? access-type 'voidstar)
-                   (eq? access-type 'pointer))))))
+                   (if pointer 
+                     (string->symbol
+                       (string-append (symbol->string attr-type) "*"))
+                     attr-type)
+                   voidstar
+                   pointer)))))
        (accessor
          (attr-worker
            (lambda (attr-name attr-type voidstar pointer)

@@ -104,7 +104,6 @@ c-declare-end
     (let* ((next (pointer->vec2_node (vec2_node-next n2)))
            (next-v (vec2_node-v next)))
       (println "next-v has x=" (vec2-x next-v) " and y=" (vec2-y next-v) "."))
-
     ))
 
 (test)
