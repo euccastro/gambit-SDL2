@@ -39,8 +39,8 @@ c-declare-end
 (c-struct vec2 (x float) (y float))
 (c-struct segment (a vec2 voidstar) (b vec2 voidstar))
 (c-union vecseg (v vec2 voidstar) (s segment voidstar))
-(c-struct vec2_and_pointer (v vec2 voidstar) (vp vec2 pointer))
-(c-struct vec2_node (v vec2 voidstar) (next vec2_node pointer))
+(c-struct vec2_and_pointer (v vec2 voidstar) (vp vec2* pointer))
+(c-struct vec2_node (v vec2 voidstar) (next vec2_node* pointer))
 
 (define vec2-normalize!
   (c-lambda ((pointer vec2)) void "normalize_vec2"))

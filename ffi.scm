@@ -43,64 +43,81 @@
 (at-expand-time
   (define (c-native struct-or-union type . fields)
     (let* 
-      ((type-name (symbol->string type))
+      ((scheme-type (if (pair? type) (car type) type))
+       (c-type (if (pair? type) (cadr type) type))
+       (scheme-type-name (symbol->string scheme-type))
+       (c-type-name (symbol->string c-type))
        (attr-worker
          (lambda (fn)
            (lambda (field)
              (let* ((attr-name (symbol->string (car field)))
+                    (scheme-attr-name (if (pair? attr-name) 
+                                        (car attr-name)
+                                        attr-name))
+                    (c-attr-name (if (pair? attr-name)
+                                   (cadr attr-name)
+                                   attr-name))
                     (attr-type (cadr field))
+                    (scheme-attr-type (if (pair? attr-type)
+                                        (car attr-type)
+                                        attr-type))
+                    (c-attr-type (if (pair? attr-type)
+                                   (cadr attr-type)
+                                   attr-type))
                     (access-type (if (null? (cddr field)) 
                                    'scalar 
                                    (caddr field)))
                     (voidstar (eq? access-type 'voidstar))
                     (pointer (eq? access-type 'pointer)))
-               (fn attr-name 
-                   (if pointer 
-                     (string->symbol
-                       (string-append (symbol->string attr-type) "*"))
-                     attr-type)
+               (fn scheme-attr-name
+                   c-attr-name
+                   scheme-attr-type
+                   c-attr-type
                    voidstar
                    pointer)))))
        (accessor
          (attr-worker
-           (lambda (attr-name attr-type voidstar pointer)
-             (let ((_voidstar (if (or voidstar pointer)
-                               "_voidstar" 
-                               ""))
+           (lambda (scheme-attr-name c-attr-name scheme-attr-type c-attr-type 
+                    voidstar pointer)
+             (let ((_voidstar (if (or voidstar pointer) "_voidstar" ""))
                    (amperstand (if voidstar "&" "")))
                `(define ,(string->symbol 
-                           (string-append type-name "-" attr-name))
-                  (c-lambda (,type) ,attr-type
+                           (string-append scheme-type-name 
+                                          "-" 
+                                          scheme-attr-name))
+                  (c-lambda (,scheme-type) ,scheme-attr-type
                             ,(string-append
                                "___result" 
                                _voidstar 
                                " = "
                                amperstand
                                "((("
-                               type-name
+                               c-type-name
                                "*)___arg1_voidstar)->"
-                               attr-name
+                               c-attr-name
                                ");")))))))
        (mutator
          (attr-worker
-           (lambda (attr-name attr-type voidstar pointer)
+           (lambda (scheme-attr-name c-attr-name scheme-attr-type c-attr-type 
+                    voidstar pointer)
              (let ((_voidstar (if (or voidstar pointer) "_voidstar" ""))
                    (cast 
                      (cond 
                        (voidstar
-                        (string-append "(" (symbol->string attr-type) "*)"))
+                        (string-append "(" (symbol->string c-attr-type) "*)"))
                        (pointer
-                        (string-append "(" (symbol->string attr-type) ")"))
+                        (string-append "(" (symbol->string c-attr-type) ")"))
                        (else "")))
                    (dereference (if voidstar "*" "")))
              `(define ,(string->symbol
-                         (string-append type-name "-" attr-name "-set!"))
-                (c-lambda (,type ,attr-type) void
+                         (string-append 
+                           scheme-type-name "-" scheme-attr-name "-set!"))
+                (c-lambda (,scheme-type ,scheme-attr-type) void
                           ,(string-append
                              "(*(" 
-                             type-name
+                             c-type-name
                              "*)___arg1_voidstar)."
-                             attr-name
+                             c-attr-name
                              " = "
                              dereference
                              cast
@@ -109,22 +126,24 @@
                              ";"))))))))
       (append
         `(begin
-           (c-define-type ,type (,struct-or-union ,type-name))
-           (c-define-type ,(string->symbol (string-append type-name "*"))
-                          (pointer ,type))
-           (define ,(string->symbol (string-append "make-" type-name))
+           (c-define-type ,scheme-type (,struct-or-union ,c-type-name))
+           (c-define-type ,(string->symbol (string-append scheme-type-name "*"))
+                          (pointer ,scheme-type))
+           (define ,(string->symbol (string-append "make-" scheme-type-name))
              ; Constructor.
-             (c-lambda () ,type
-                       ,(string-append
-                          "___result_voidstar = "
-                          "___EXT(___alloc_rc)(sizeof(" type-name "));")))
-           (define ,(string->symbol (string-append type-name "-pointer"))
+             (c-lambda () ,scheme-type
+               ,(string-append
+                  "___result_voidstar = "
+                  "___EXT(___alloc_rc)(sizeof(" c-type-name "));")))
+           (define ,(string->symbol 
+                      (string-append scheme-type-name "-pointer"))
              ; Take pointer.
-             (c-lambda (,type) (pointer ,type)
+             (c-lambda (,scheme-type) (pointer ,scheme-type)
                        "___result_voidstar = ___arg1_voidstar;"))
-           (define ,(string->symbol (string-append "pointer->" type-name))
+           (define ,(string->symbol 
+                      (string-append "pointer->" scheme-type-name))
              ; Pointer dereference
-             (c-lambda ((pointer ,type)) ,type
+             (c-lambda ((pointer ,scheme-type)) ,scheme-type
                        "___result_voidstar = ___arg1_voidstar;")))
         (map accessor fields)
         (map mutator fields)))))
