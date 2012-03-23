@@ -8,8 +8,32 @@
   (apply println msgs)
   (exit 1))
 
-(define (mainloop)
-  (thread-sleep! 2))
+(define mainloop
+  (let* ((evt (make-SDL_Event))
+         (evt* (SDL_Event-pointer evt)))
+    (lambda (window)
+      (call-with-current-continuation
+        (lambda (k)
+          (let ((return (lambda () (k #f))))
+            (let loop ()
+              (if (SDL_WaitEvent evt*)
+                (begin
+                  (let ((evt-type (SDL_Event-type evt)))
+                    (cond ((= evt-type SDL_KEYDOWN)
+                           (let* ((kevt (SDL_Event-key evt))
+                                  (key (SDL_Keysym-sym 
+                                         (SDL_KeyboardEvent-keysym kevt))))
+                             (cond ((= key SDLK_ESCAPE)
+                                    (println "Bye.")
+                                    (return))
+                                   (else
+                                     (println "Unknown key: " key)))))
+                          (else
+                            (println "Got event type " SDL_KEYDOWN " " evt-type " " (to-int evt-type)))))
+                  (SDL_GL_SwapWindow window)
+                  (SDL_Delay 1)
+                  (loop))
+                (println "Error fetching event.")))))))))
 
 (define window_width 640)
 (define window_height 480)
@@ -36,9 +60,11 @@
       (SDL_GL_SetSwapInterval 1)
       (glMatrixMode GL_PROJECTION)
       (glLoadIdentity)
-      (glOrtho 0.0 (exact->inexact window_width) (exact->inexact window_height) 0.0 0.0 1000.0)
+      (glOrtho 0.0 (exact->inexact window_width) 
+               0.0 (exact->inexact window_height)
+               0.0 1000.0)
       (glMatrixMode GL_MODELVIEW)
-      (mainloop)
+      (mainloop win)
       (SDL_GL_DeleteContext ctx)
       (SDL_DestroyWindow win)
       (SDL_Quit))))
