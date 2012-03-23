@@ -1,4 +1,16 @@
 ; https://mercure.iro.umontreal.ca/pipermail/gambit-list/2009-August/003781.html
+
+(c-declare #<<c-declare-end
+
+___SCMOBJ leave_alone(void *p)
+{
+    return ___FIX(___NO_ERR);
+}
+
+c-declare-end
+)
+
+
 (define-macro (at-expand-time-and-runtime . exprs)
   (let ((l `(begin ,@exprs)))
     (eval l)
@@ -41,6 +53,7 @@
               names))))
 
 (at-expand-time
+  (define unmanaged-prefix "__um_")
   (define (c-native struct-or-union type . fields)
     (let* 
       ((scheme-type (if (pair? type) (car type) type))
@@ -80,7 +93,13 @@
            (lambda (scheme-attr-name c-attr-name scheme-attr-type c-attr-type 
                                      voidstar pointer)
              (let ((_voidstar (if (or voidstar pointer) "_voidstar" ""))
-                   (amperstand (if voidstar "&" "")))
+                   (amperstand (if voidstar "&" ""))
+                   (scheme-attr-type (if voidstar
+                                       (string->symbol
+                                         (string-append 
+                                           unmanaged-prefix
+                                           (symbol->string scheme-attr-type)))
+                                       scheme-attr-type)))
                `(define ,(string->symbol 
                            (string-append scheme-type-name 
                                           "-" 
@@ -126,7 +145,12 @@
                                ";"))))))))
       (append
         `(begin
-           (c-define-type ,scheme-type (,struct-or-union ,c-type-name))
+           (c-define-type ,scheme-type (,struct-or-union ,c-type-name ,c-type))
+           ; Unmanaged version of structure.
+           (c-define-type ,(string->symbol 
+                             (string-append unmanaged-prefix scheme-type-name))
+                          (,struct-or-union ,c-type-name ,c-type
+                           "leave_alone"))
            (c-define-type ,(string->symbol (string-append scheme-type-name "*"))
                           (pointer ,scheme-type))
            (define ,(string->symbol (string-append "make-" scheme-type-name))
