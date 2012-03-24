@@ -1,5 +1,3 @@
-; https://mercure.iro.umontreal.ca/pipermail/gambit-list/2009-August/003781.html
-
 (c-declare #<<c-declare-end
 
 ___SCMOBJ leave_alone(void *p)
@@ -11,6 +9,7 @@ c-declare-end
 )
 
 
+; https://mercure.iro.umontreal.ca/pipermail/gambit-list/2009-August/003781.html
 (define-macro (at-expand-time-and-runtime . exprs)
   (let ((l `(begin ,@exprs)))
     (eval l)
