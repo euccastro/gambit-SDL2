@@ -373,11 +373,11 @@
 (define SDL_Delay
   (c-lambda (unsigned-int32) void "SDL_Delay"))
 
-(define SDL_GL_DeleteContext
-  (c-lambda (SDL_GLContext) void "SDL_GL_DeleteContext"))
-
 (define SDL_DestroyWindow
   (c-lambda (SDL_Window*) void "SDL_DestroyWindow"))
+
+(define SDL_GL_DeleteContext
+  (c-lambda (SDL_GLContext) void "SDL_GL_DeleteContext"))
 
 (define SDL_GL_GetAttribute
   (c-lambda (SDL_GLattr (pointer int)) int 
@@ -396,6 +396,12 @@
 (define SDL_GL_SwapWindow
   (c-lambda (SDL_Window*) void "SDL_GL_SwapWindow"))
 
+(define SDL_GetPerformanceCounter
+  (c-lambda () unsigned-int64 "SDL_GetPerformanceCounter"))
+
+(define SDL_GetPerformanceFrequency
+  (c-lambda () unsigned-int64 "SDL_GetPerformanceFrequency"))
+
 (define SDL_Init
   (c-lambda (unsigned-int32) int "SDL_Init"))
 
@@ -407,6 +413,3 @@
 
 (define SDL_WaitEvent
   (c-lambda (SDL_Event*) int "SDL_WaitEvent"))
-
-(define to-int
-  (c-lambda (unsigned-int32) int "___result = (int)___arg1;"))
