@@ -108,6 +108,9 @@ c-declare-end
                             ,(string-append
                                c-type-name "* ptr = ___CAST(" c-type-name
                                "*, ___FIELD(___arg1,___FOREIGN_PTR));\n"
+                               (if voidstar
+                                 "___set_data_rc(ptr, ___arg1);\n"
+                                 "")
                                "___result" _voidstar " = "
                                amperstand "(ptr->" c-attr-name ");")))))))
        (mutator
