@@ -31,7 +31,8 @@
   'tbd)
 
 (define (render)
-  'tbd)
+  (glClearColor 0.3 0.6 0.9 1.0)
+  (glClear GL_COLOR_BUFFER_BIT))
 
 (define mainloop
   (let* ((evt (make-SDL_Event))

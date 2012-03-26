@@ -21,14 +21,15 @@
 (c-define-type GLclampd double)
 
 (c-constants
+  GL_COLOR_BUFFER_BIT
+  GL_EXTENSIONS
   GL_MATRIX_MODE
   GL_MODELVIEW
   GL_PROJECTION
+  GL_RENDERER
   GL_TEXTURE
   GL_VENDOR
-  GL_RENDERER
-  GL_VERSION
-  GL_EXTENSIONS)
+  GL_VERSION)
 
 (define glBegin
   (c-lambda (GLenum) void "glBegin"))
