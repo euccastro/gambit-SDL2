@@ -1,9 +1,9 @@
 #!/usr/bin/env sh
 
-gsc -link -flat -o sdl.o1.c sdl.scm \
-&& gsc -cc-options "-D___DYNAMIC" -obj sdl.c sdl.o1.c \
+gsc -debug -link -flat -o sdl.o1.c sdl.scm \
+&& gsc -debug -cc-options "-D___DYNAMIC -O0 -g" -obj sdl.c sdl.o1.c \
 && gcc -shared sdl.o sdl.o1.o -lSDL2 -o sdl.o1
 
-gsc -link -flat -o gl.o1.c gl.scm \
-&& gsc -cc-options "-D___DYNAMIC" -obj gl.c gl.o1.c \
+gsc -debug -link -flat -o gl.o1.c gl.scm \
+&& gsc -debug -cc-options "-D___DYNAMIC -O0 -g" -obj gl.c gl.o1.c \
 && gcc -shared gl.o gl.o1.o -lGL -o gl.o1
