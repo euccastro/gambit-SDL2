@@ -88,39 +88,38 @@ c-declare-end
                    voidstar
                    pointer)))))
        (accessor
-         (attr-worker
-           (lambda (scheme-attr-name c-attr-name scheme-attr-type c-attr-type 
-                                     voidstar pointer)
-             (let ((_voidstar (if (or voidstar pointer) "_voidstar" ""))
-                   (amperstand (if voidstar "&" ""))
-                   (scheme-attr-type (if voidstar
+	(attr-worker
+	 (lambda (scheme-attr-name c-attr-name scheme-attr-type c-attr-type 
+				   voidstar pointer)
+	   (let ((_voidstar (if (or voidstar pointer) "_voidstar" ""))
+		 (amperstand (if voidstar "&" ""))
+		 (scheme-attr-type (if voidstar
                                        (string->symbol
-                                         (string-append 
-                                           unmanaged-prefix
-                                           (symbol->string scheme-attr-type)))
+					(string-append 
+					 unmanaged-prefix
+					 (symbol->string scheme-attr-type)))
                                        scheme-attr-type)))
-               `(define (,(string->symbol 
-                            (string-append scheme-type-name 
-                                           "-" 
-                                           scheme-attr-name))
-                          struct)
-                  (if (and (foreign? struct)
-                           (memq (quote ,c-type) (foreign-tags struct)))
-                    ((c-lambda (scheme-object) ,scheme-attr-type
-                              ,(string-append
-                                 c-type-name "* ptr = ___CAST(" c-type-name
-                                 "*, ___FIELD(___arg1,___FOREIGN_PTR));\n"
-                                 (if voidstar
-                                   "___set_data_rc(ptr, ___arg1);\n"
-                                   "")
-                                 "___result" _voidstar " = "
-                                 amperstand "(ptr->" c-attr-name ");"))
-                     struct)
-                    (raise (apply string-append
-                             "Not a " ,c-type-name ": " (object->string struct) "; tags: "
-                             (if (foreign? struct) 
-                               (map symbol->string (foreign-tags struct)) 
-                               '("none (not a foreign object)"))))))))))
+	     `(define (,(string->symbol 
+			 (string-append scheme-type-name 
+					"-" 
+					scheme-attr-name))
+		       parent)
+		(let ((ret
+		       ((c-lambda (,scheme-type) ,scheme-attr-type
+				  ,(string-append
+				    "___result" _voidstar
+				    ; XXX: correctly cast to type, should help with enums in C++.
+				    ;" = (" (symbol->string c-attr-type) ")"
+				    " = "
+				    amperstand "(((" c-type-name "*)___arg1_voidstar)->"
+				    c-attr-name ");"))
+			parent)))
+		  ,@(if voidstar
+			`(((c-lambda (,scheme-attr-type scheme-object) void
+				     "___set_data_rc(___arg1_voidstar, ___arg2);")
+			   ret parent))
+			'())
+		  ret))))))
        (mutator
          (attr-worker
            (lambda (scheme-attr-name c-attr-name scheme-attr-type c-attr-type 
@@ -132,6 +131,7 @@ c-declare-end
                          (string-append "(" (symbol->string c-attr-type) "*)"))
                        (pointer
                          (string-append "(" (symbol->string c-attr-type) ")"))
+		       ; XXX: cast primitive types too, should help with enums in C++
                        (else "")))
                    (dereference (if voidstar "*" "")))
                `(define ,(string->symbol
