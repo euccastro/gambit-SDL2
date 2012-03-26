@@ -106,15 +106,10 @@ c-declare-end
                   ;XXX: check type.
                   (c-lambda (scheme-object) ,scheme-attr-type
                             ,(string-append
-                               "___result" 
-                               _voidstar 
-                               " = "
-                               amperstand
-                               "(___CAST("
-                               c-type-name
-                               "*, ___FIELD(___arg1,___FOREIGN_PTR))->"
-                               c-attr-name
-                               ");")))))))
+                               c-type-name "* ptr = ___CAST(" c-type-name
+                               "*, ___FIELD(___arg1,___FOREIGN_PTR));\n"
+                               "___result" _voidstar " = "
+                               amperstand "(ptr->" c-attr-name ");")))))))
        (mutator
          (attr-worker
            (lambda (scheme-attr-name c-attr-name scheme-attr-type c-attr-type 
