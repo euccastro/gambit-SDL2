@@ -99,20 +99,28 @@ c-declare-end
                                            unmanaged-prefix
                                            (symbol->string scheme-attr-type)))
                                        scheme-attr-type)))
-               `(define ,(string->symbol 
-                           (string-append scheme-type-name 
-                                          "-" 
-                                          scheme-attr-name))
-                  ;XXX: check type.
-                  (c-lambda (scheme-object) ,scheme-attr-type
-                            ,(string-append
-                               c-type-name "* ptr = ___CAST(" c-type-name
-                               "*, ___FIELD(___arg1,___FOREIGN_PTR));\n"
-                               (if voidstar
-                                 "___set_data_rc(ptr, ___arg1);\n"
-                                 "")
-                               "___result" _voidstar " = "
-                               amperstand "(ptr->" c-attr-name ");")))))))
+               `(define (,(string->symbol 
+                            (string-append scheme-type-name 
+                                           "-" 
+                                           scheme-attr-name))
+                          struct)
+                  (if (and (foreign? struct)
+                           (memq (quote ,c-type) (foreign-tags struct)))
+                    ((c-lambda (scheme-object) ,scheme-attr-type
+                              ,(string-append
+                                 c-type-name "* ptr = ___CAST(" c-type-name
+                                 "*, ___FIELD(___arg1,___FOREIGN_PTR));\n"
+                                 (if voidstar
+                                   "___set_data_rc(ptr, ___arg1);\n"
+                                   "")
+                                 "___result" _voidstar " = "
+                                 amperstand "(ptr->" c-attr-name ");"))
+                     struct)
+                    (raise (apply string-append
+                             "Not a " ,c-type-name ": " (object->string struct) "; tags: "
+                             (if (foreign? struct) 
+                               (map symbol->string (foreign-tags struct)) 
+                               '("none (not a foreign object)"))))))))))
        (mutator
          (attr-worker
            (lambda (scheme-attr-name c-attr-name scheme-attr-type c-attr-type 
