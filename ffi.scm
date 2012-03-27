@@ -115,8 +115,9 @@ c-declare-end
 				    c-attr-name ");"))
 			parent)))
 		  ,@(if voidstar
-			`(((c-lambda (,scheme-attr-type scheme-object) void
-				     "___set_data_rc(___arg1_voidstar, ___arg2);")
+			`(((c-lambda
+			    (,scheme-attr-type scheme-object) void
+			    "___EXT(___set_data_rc)(___arg1_voidstar, ___arg2);")
 			   ret parent))
 			'())
 		  ret))))))
