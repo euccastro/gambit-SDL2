@@ -156,12 +156,9 @@ c-declare-end
      ; Check that by default a struct is released when it goes out of
      ; scope.
      (let ((vs-released #f))
-	(let ((vs (make-vecseg))
-	      (something (cons 'a 'b)))
+	(let ((vs (make-vecseg)))
 	  (make-will vs (lambda (blah)
-			  (set! vs-released #t)))
-	  (make-will something (lambda (blah)
-				 (set! vs-released #t))))
+			  (set! vs-released #t))))
 	(gc-voodoo)
 	(assert vs-released)))
    ))
