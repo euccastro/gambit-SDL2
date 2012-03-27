@@ -161,6 +161,24 @@ c-declare-end
 			  (set! vs-released #t))))
 	(gc-voodoo)
 	(assert vs-released)))
+   ; Check that a struct will no be released while a child holds a
+   ; reference to it, but it will be released when the child itself
+   ; goes away.
+   (lambda ()
+     (let* ((parent-released #f)
+	    (child-released #f)
+            (parent (make-vecseg))
+	    (child (vecseg-v parent)))
+	 (make-will parent (lambda (blah) (set! parent-released #t)))
+	 (make-will child (lambda (blah) (set! child-released #t)))
+	 (set! parent #f)
+	 (gc-voodoo)
+	 (assert (not parent-released))
+	 (assert (not child-released))
+	 (set! child #f)
+	 (gc-voodoo)
+	 (assert child-released)
+	 (assert parent-released)))
    ))
 
 (define (gc-voodoo)
