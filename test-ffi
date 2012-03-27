@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+gsc -exe -o test-ffi~ -ld-options "-lm" test-ffi.scm \
+&& ./test-ffi~
