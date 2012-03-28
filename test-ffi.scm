@@ -183,12 +183,12 @@ c-declare-end
 
 (define (gc-voodoo)
   (##gc)
-  (thread-sleep! .1)
+  (thread-sleep! 0.001)
   (##gc)
-  (thread-sleep! .1)
+  (thread-sleep! 0.001)
   ; For good measure... :/
   (##gc)
-  (thread-sleep! .1))
+  (thread-sleep! 0.001))
 
 (println)
 (for-each (lambda (t)
