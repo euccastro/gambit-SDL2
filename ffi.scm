@@ -3,6 +3,8 @@
 ___SCMOBJ leave_alone(void *p)
 {
     ___EXT(___set_data_rc)(p, 0);
+    p = NULL;
+    ___EXT(___release_rc)(p);
     return ___FIX(___NO_ERR);
 }
 
