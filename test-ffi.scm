@@ -11,7 +11,7 @@ typedef struct {float x, y;} vec2;
 typedef struct {vec2 a, b;} segment;
 typedef union {vec2 v; segment s;} vecseg;
 typedef struct {vec2 v, *vp;} vec2_and_pointer;
-typedef struct vec2_node vec2_node; 
+typedef struct vec2_node vec2_node;
 struct vec2_node {vec2 v; vec2_node* next;};
 
 void normalize_vec2(vec2* v)
@@ -34,16 +34,16 @@ c-declare-end
 
 (c-struct vec2 (x float) (y float))
 (c-struct segment (a vec2 voidstar) (b vec2 voidstar))
-(c-union vecseg 
-  (v vec2 voidstar) 
+(c-union vecseg
+  (v vec2 voidstar)
   (s segment voidstar))
-(c-struct (vec2-and-pointer vec2_and_pointer) 
-  (v vec2 voidstar) 
+(c-struct (vec2-and-pointer vec2_and_pointer)
+  (v vec2 voidstar)
   (vp vec2* pointer))
-(c-struct (vec2-node vec2_node) 
+(c-struct (vec2-node vec2_node)
   (v vec2 voidstar)
   ((lets-call-this-scheme-next-just-for-the-sake-of-testing next)
-   ((pointer vec2-node) vec2_node*) 
+   ((pointer vec2-node) vec2_node*)
    pointer))
 
 (define vec2-normalize!
@@ -129,7 +129,7 @@ c-declare-end
                           ,@(make-print-list #\newline (cdr reported)) nl)
                     (error "assertion failure"))))
        (else (loop (cons (car reported) exprs) (cdr reported))))))))
-    
+
 (define-macro (assure exp error-msg) `(assert ,exp report: ,error-msg))
 
 (define ~
@@ -197,4 +197,3 @@ c-declare-end
 	  tests)
 (println)
 (println "All OK.")
-       

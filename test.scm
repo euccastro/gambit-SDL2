@@ -8,12 +8,12 @@
   (apply println msgs)
   (exit 1))
 
-(define (handle-event event dt)
+(define (handle-event window event dt)
   (let ((evt-type (SDL_Event-type event)))
     (cond
      ((= evt-type SDL_KEYDOWN)
       (let* ((kevt (SDL_Event-key event))
-	     (key (SDL_Keysym-sym 
+	     (key (SDL_Keysym-sym
 		   (SDL_KeyboardEvent-keysym
 		    kevt))))
 	(cond ((= key SDLK_ESCAPE)
@@ -81,7 +81,7 @@
   (SDL_GL_SetAttribute SDL_GL_GREEN_SIZE 8)
   (SDL_GL_SetAttribute SDL_GL_BLUE_SIZE 8)
   (SDL_GL_SetAttribute SDL_GL_ALPHA_SIZE 8)
-  (let ((win (SDL_CreateWindow 
+  (let ((win (SDL_CreateWindow
 	      "Hello SDL"
 	      SDL_WINDOWPOS_CENTERED
 	      SDL_WINDOWPOS_CENTERED

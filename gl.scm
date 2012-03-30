@@ -4,7 +4,7 @@
 
 (c-declare "#include \"SDL_opengl.h\"")
 
-(c-define-type GLenum unsigned-int)	
+(c-define-type GLenum unsigned-int)
 (c-define-type GLboolean unsigned-char)
 (c-define-type GLbitfield unsigned-int)
 (c-define-type GLvoid void)
