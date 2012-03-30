@@ -14,7 +14,7 @@
   (apply println msgs)
   (exit 1))
 
-(define (handle-event window event dt)
+(define (handle-event event dt)
   (let ((evt-type (SDL_Event-type event)))
     (cond
      ((= evt-type SDL_KEYDOWN)
