@@ -392,6 +392,10 @@
 (define SDL_DestroyWindow
   (c-lambda (SDL_Window*) void "SDL_DestroyWindow"))
 
+(define SDL_GetWindowPosition
+  (c-lambda (SDL_Window* (pointer int) (pointer int)) void
+	    "SDL_GetWindowPosition"))
+
 (define SDL_GL_DeleteContext
   (c-lambda (SDL_GLContext) void "SDL_GL_DeleteContext"))
 
