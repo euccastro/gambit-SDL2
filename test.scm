@@ -1,5 +1,11 @@
-(load "sdl.o1")
-(load "gl.o1")
+(load "sdl")
+(load "gl")
+(load "ffi")
+
+(define window-width 640)
+(define window-height 480)
+(define window-x #f)
+(define window-y #f)
 
 (define-macro (when check . exprs)
   `(if ,check (begin ,@exprs) #f))
@@ -69,9 +75,6 @@
 	       (SDL_Delay 1)
 	       (frame-loop now)))))))))
 
-(define window_width 640)
-(define window_height 480)
-
 (define (test)
   (when (< (SDL_Init SDL_INIT_VIDEO) 0)
 	(critical-error "Couldn't initialize SDL!"))
@@ -85,17 +88,26 @@
 	      "Hello SDL"
 	      SDL_WINDOWPOS_CENTERED
 	      SDL_WINDOWPOS_CENTERED
-	      window_width window_height
-	      (bitwise-ior SDL_WINDOW_OPENGL SDL_WINDOW_SHOWN))))
+	      window-width window-height
+	      (bitwise-ior SDL_WINDOW_OPENGL
+			   SDL_WINDOW_RESIZABLE
+			   SDL_WINDOW_SHOWN)))
+        (xpos (make-int*))
+	(ypos (make-int*)))
     (when (not win)
-	  (critical-error "Unable to create render window" (SDL_GetError)))
+	  (critical-error "Unable to create render window"
+			  (SDL_GetError)))
+    (SDL_GetWindowPosition win xpos ypos)
+    (set! window-x (dereference-read-int* xpos))
+    (set! window-y (dereference-read-int* ypos))
+    (println "Window started at (" window-x ", " window-y ").")
     (let ((ctx (SDL_GL_CreateContext win)))
       (println "GL version seems to be " (glGetString GL_VERSION))
       (SDL_GL_SetSwapInterval 1)
       (glMatrixMode GL_PROJECTION)
       (glLoadIdentity)
-      (glOrtho 0.0 (exact->inexact window_width) 
-               0.0 (exact->inexact window_height)
+      (glOrtho 0.0 (exact->inexact window-width)
+               0.0 (exact->inexact window-height)
                0.0 1000.0)
       (glMatrixMode GL_MODELVIEW)
       (mainloop win)
