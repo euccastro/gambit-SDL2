@@ -400,14 +400,14 @@
   (c-lambda (SDL_GLContext) void "SDL_GL_DeleteContext"))
 
 (define SDL_GL_GetAttribute
-  (c-lambda (SDL_GLattr (pointer int)) int 
+  (c-lambda (SDL_GLattr (pointer int)) int
     ; In this and other functions taking C enums, explicitly casting to the
     ; appropriate enum type is required for compatibility with C++ compilers
     ; (building with these is untested, though).
     "___result = SDL_GL_GetAttribute((SDL_GLattr)___arg1, (int*)___arg2_voidstar);"))
 
 (define SDL_GL_SetAttribute
-  (c-lambda (SDL_GLattr int) int 
+  (c-lambda (SDL_GLattr int) int
     "___result = SDL_GL_SetAttribute((SDL_GLattr)___arg1, ___arg2);"))
 
 (define SDL_GL_SetSwapInterval
