@@ -1,7 +1,7 @@
 ;   gsc -exe -o test-macro-struct~ -ld-options "-lm" test-macro-struct.scm
 ;   ./test-macro-struct~
 
-(include "ffi.scm")
+(include "ffi-macro.scm")
 
 (c-declare #<<c-declare-end
 

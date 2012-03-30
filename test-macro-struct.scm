@@ -5,7 +5,7 @@
 ;XXX: allow a different scheme type name.
 ;XXX: test pointer->struct.
 
-(include "ffi.scm")
+(include "ffi-macro.scm")
 
 (c-declare #<<c-declare-end
 

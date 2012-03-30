@@ -1,4 +1,4 @@
-(include "ffi.scm")
+(include "ffi-macro.scm")
 
 (c-declare "#include \"SDL.h\"")
 
