@@ -24,6 +24,17 @@
      ((= evt-type SDL_QUIT)
       (println "Got SDL_QUIT.  Bye!")
       'quit)
+     ((= evt-type SDL_WINDOWEVENT)
+      (let* ((wevt (SDL_Event-window event))
+	     (type (SDL_WindowEvent-event wevt))
+	     (data1 (SDL_WindowEvent-data1 wevt))
+	     (data2 (SDL_WindowEvent-data2 wevt)))
+	(cond
+	 ((= type SDL_WINDOWEVENT_RESIZED)
+	  (println "Got resize event: (" data1 ", " data2 ")."))
+	 ((= type SDL_WINDOWEVENT_MOVED)
+	  (println "Got move event: (" data1 ", " data2 ")."))
+	 (else (println "Got window event " type)))))
      (else
       (println "Got event type " evt-type)))))
 
