@@ -1,5 +1,9 @@
 #!/usr/bin/env sh
 
+gsc -debug -link -flat -o ffi.o1.c ffi.scm \
+&& gsc -debug -cc-options "-D___DYNAMIC -O0 -g" -obj ffi.c ffi.o1.c \
+&& gcc -shared ffi.o ffi.o1.o -o ffi.o1
+
 gsc -debug -link -flat -o sdl.o1.c sdl.scm \
 && gsc -debug -cc-options "-D___DYNAMIC -O0 -g" -obj sdl.c sdl.o1.c \
 && gcc -shared sdl.o sdl.o1.o -lSDL2 -o sdl.o1
