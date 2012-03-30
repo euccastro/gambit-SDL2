@@ -428,6 +428,9 @@
 (define SDL_PollEvent
   (c-lambda (SDL_Event*) int "SDL_PollEvent"))
 
+(define SDL_RaiseWindow
+  (c-lambda (SDL_Window*) void "SDL_RaiseWindow"))
+
 (define SDL_Quit
   (c-lambda () void "SDL_Quit"))
 
