@@ -14,42 +14,52 @@
 (define ball-y #f)
 (define ball-vel-x 184.)
 (define ball-vel-y 184.)
-(define ball-radius 10)
+(define ball-radius 10.)
+(define paddle-radius 40.)
+(define paddle-x #f)
 (define two-pi (* 2 M_PI))
 
-(define (check-ball-collision)
-  (let ((left-wall window-x)
-	(bottom-wall window-y)
-	(right-wall (+ window-x window-width))
-	(top-wall (+ window-y window-height))
-	(ball-left (- ball-x ball-radius))
-	(ball-bottom (- ball-y ball-radius))
-	(ball-right (+ ball-x ball-radius))
-	(ball-top (+ ball-y ball-radius)))
-    (if (< ball-left left-wall)
-	(begin
-	  (set! ball-x (+ left-wall ball-radius))
-	  (if (< ball-vel-x 0)
-	      (set! ball-vel-x (- ball-vel-x)))))
-    (if  (< ball-bottom bottom-wall)
-	 (begin
-	   (set! ball-y (+ bottom-wall ball-radius))
-	   (if (< ball-vel-y 0)
-	       (set! ball-vel-y (- ball-vel-y)))))
-    (if (> ball-right right-wall)
-	(begin
-	  (set! ball-x (- right-wall ball-radius))
-	  (if (> ball-vel-x 0)
-	      (set! ball-vel-x (- ball-vel-x)))))
-    (if (> ball-top top-wall)
-	(begin
-	  (set! ball-y (- top-wall ball-radius))
-	  (if (> ball-vel-y 0)
-	      (set! ball-vel-y (- ball-vel-y)))))
-    (if (exact? ball-x)
-	(set! ball-x (exact->inexact ball-x)))
-    (if (exact? ball-y)
-	(set! ball-y (exact->inexact ball-y)))))
+(define (with-window-extents fn)
+  (fn window-x window-y
+      (+ window-x window-width) (+ window-y window-height)))
+
+(define (check-paddle-wall-collision)
+  (with-window-extents
+   (lambda (left-wall bottom-wall right-wall top-wall)
+     (let ((paddle-left (- paddle-x paddle-radius))
+	   (paddle-right (+ paddle-x paddle-radius)))
+       (if (< paddle-left left-wall)
+	   (set! paddle-x (+ left-wall paddle-radius)))
+       (if (> paddle-right right-wall)
+	   (set! paddle-x (- right-wall paddle-radius)))))))
+
+(define (check-ball-wall-collision)
+  (with-window-extents
+   (lambda (left-wall bottom-wall right-wall top-wall)
+     (let ((ball-left (- ball-x ball-radius))
+	   (ball-bottom (- ball-y ball-radius))
+	   (ball-right (+ ball-x ball-radius))
+	   (ball-top (+ ball-y ball-radius)))
+       (if (< ball-left left-wall)
+	   (begin
+	     (set! ball-x (+ left-wall ball-radius))
+	     (if (< ball-vel-x 0)
+		 (set! ball-vel-x (- ball-vel-x)))))
+       (if  (< ball-bottom bottom-wall)
+	    (begin
+	      (set! ball-y (+ bottom-wall ball-radius))
+	      (if (< ball-vel-y 0)
+		  (set! ball-vel-y (- ball-vel-y)))))
+       (if (> ball-right right-wall)
+	   (begin
+	     (set! ball-x (- right-wall ball-radius))
+	     (if (> ball-vel-x 0)
+		 (set! ball-vel-x (- ball-vel-x)))))
+       (if (> ball-top top-wall)
+	   (begin
+	     (set! ball-y (- top-wall ball-radius))
+	     (if (> ball-vel-y 0)
+		 (set! ball-vel-y (- ball-vel-y)))))))))
 
 (define (critical-error . msgs)
   (apply println msgs)
@@ -108,7 +118,8 @@
 (define (update dt)
   (set! ball-x (+ ball-x (* ball-vel-x dt)))
   (set! ball-y (+ ball-y (* ball-vel-y dt)))
-  (check-ball-collision))
+  (check-ball-wall-collision)
+  (check-paddle-wall-collision))
 
 (define draw-circle
   (let ((num-divisions 32))
@@ -129,7 +140,10 @@
 (define (render)
   (glClearColor 0.3 0.6 0.9 1.0)
   (glClear GL_COLOR_BUFFER_BIT)
-  (draw-circle ball-x ball-y ball-radius))
+  (draw-circle ball-x ball-y ball-radius)
+  (draw-circle paddle-x
+	       (exact->inexact (+ window-y window-height))
+	       paddle-radius))
 
 (define mainloop
   (let* ((evt (make-SDL_Event))
@@ -184,6 +198,7 @@
     (println "Window started at (" window-x ", " window-y ").")
     (set! ball-x (+ window-x (/ window-width 2.)))
     (set! ball-y (+ window-y (/ window-height 2.)))
+    (set! paddle-x ball-x)
     (println "Ball started at (" ball-x " " ball-y)
     (let ((ctx (SDL_GL_CreateContext win)))
       (println "GL version " (glGetString GL_VERSION))
