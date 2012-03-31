@@ -67,13 +67,13 @@
   (apply glOrtho
 	 (map exact->inexact
 	      (list window-x (+ window-x window-width)
-		    window-y (+ window-y window-height)
+		    (+ window-y window-height) window-y
 		    0.0 1000.0)))
   (glMatrixMode GL_MODELVIEW))
 
 (define (on-window-move x y)
   (set! window-x x)
-  (set! window-y (- y))
+  (set! window-y y)
   (adjust-projection))
 
 (define (handle-event event dt)
@@ -179,7 +179,7 @@
 			(SDL_GetError)))
     (SDL_GetWindowPosition win xpos ypos)
     (set! window-x (dereference-read-int* xpos))
-    (set! window-y (- (dereference-read-int* ypos)))
+    (set! window-y (dereference-read-int* ypos))
     (on-resize window-width window-height)
     (println "Window started at (" window-x ", " window-y ").")
     (set! ball-x (+ window-x (/ window-width 2.)))
