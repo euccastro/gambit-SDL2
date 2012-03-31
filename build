@@ -1,5 +1,9 @@
 #!/usr/bin/env sh
 
+gsc -debug -link -flat -o math.o1.c math.scm \
+&& gsc -debug -cc-options "-D___DYNAMIC -O0 -g" -obj math.c math.o1.c \
+&& gcc -shared math.o math.o1.o -lm -o math.o1
+
 gsc -debug -link -flat -o ffi.o1.c ffi.scm \
 && gsc -debug -cc-options "-D___DYNAMIC -O0 -g" -obj ffi.c ffi.o1.c \
 && gcc -shared ffi.o ffi.o1.o -o ffi.o1
