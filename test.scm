@@ -12,12 +12,18 @@
 (define window-y #f)
 (define ball-x #f)
 (define ball-y #f)
-(define ball-vel-x 184.)
-(define ball-vel-y 184.)
+(define ball-vel-x 300.)
+(define ball-vel-y 300.)
 (define ball-radius 10.)
 (define paddle-radius 40.)
 (define paddle-x #f)
+(define paddle-speed (* 3. (/ ball-vel-x 2.)))
 (define two-pi (* 2 M_PI))
+(define pressing-left #f)
+(define pressing-right #f)
+
+(define (paddle-y)
+  (exact->inexact (+ window-y window-height)))
 
 (define (with-window-extents fn)
   (fn window-x window-y
@@ -97,6 +103,20 @@
 	(cond ((= key SDLK_ESCAPE)
 	       (println "Bye.")
 	       'quit)
+	      ((= key SDLK_LEFT)
+	       (set! pressing-left #t))
+	      ((= key SDLK_RIGHT)
+	       (set! pressing-right #t))
+	      (else
+	       (println "Unknown key: " key)))))
+     ((= evt-type SDL_KEYUP)
+      (let* ((kevt (SDL_Event-key event))
+	     (key (SDL_Keysym-sym
+		   (SDL_KeyboardEvent-keysym kevt))))
+	(cond ((= key SDLK_LEFT)
+	       (set! pressing-left #f))
+	      ((= key SDLK_RIGHT)
+	       (set! pressing-right #f))
 	      (else
 	       (println "Unknown key: " key)))))
      ((= evt-type SDL_QUIT)
@@ -118,6 +138,9 @@
 (define (update dt)
   (set! ball-x (+ ball-x (* ball-vel-x dt)))
   (set! ball-y (+ ball-y (* ball-vel-y dt)))
+  (let ((speed (* paddle-speed (- (if pressing-right 1 0)
+				  (if pressing-left 1 0)))))
+    (set! paddle-x (+ paddle-x (* speed dt))))
   (check-ball-wall-collision)
   (check-paddle-wall-collision))
 
@@ -141,9 +164,7 @@
   (glClearColor 0.3 0.6 0.9 1.0)
   (glClear GL_COLOR_BUFFER_BIT)
   (draw-circle ball-x ball-y ball-radius)
-  (draw-circle paddle-x
-	       (exact->inexact (+ window-y window-height))
-	       paddle-radius))
+  (draw-circle paddle-x (paddle-y) paddle-radius))
 
 (define mainloop
   (let* ((evt (make-SDL_Event))
