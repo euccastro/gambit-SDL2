@@ -12,8 +12,8 @@
 (define window-y #f)
 (define ball-x #f)
 (define ball-y #f)
-(define ball-vel-x 300.)
-(define ball-vel-y 300.)
+(define ball-vel-x 200.)
+(define ball-vel-y 200.)
 (define ball-radius 10.)
 (define paddle-radius 40.)
 (define paddle-x #f)
@@ -66,6 +66,37 @@
 	     (set! ball-y (- top-wall ball-radius))
 	     (if (> ball-vel-y 0)
 		 (set! ball-vel-y (- ball-vel-y)))))))))
+
+(define (square x)
+  (* x x))
+
+(define (length x y)
+  (sqrt (+ (square x) (square y))))
+
+(define (check-ball-paddle-collision)
+  (let* ((py (paddle-y))
+	 (diff-x (- ball-x paddle-x))
+	 (diff-y (- ball-y py))
+	 (center-dist (length diff-x diff-y))
+	 (surf-dist (- center-dist (+ ball-radius paddle-radius))))
+    (if (< surf-dist 0)
+	; Move apart.
+	(begin
+	  (let ((norm-x (/ diff-x center-dist))
+		(norm-y (/ diff-y center-dist)))
+	    (set! ball-x (+ paddle-x
+			    (* norm-x
+			       (+ ball-radius paddle-radius 1))))
+	    (set! ball-y (+ py
+			    (* norm-y
+			       (+ ball-radius paddle-radius 1)))))
+	  ; Bounce away.
+	  (let ((new-vel (get-bounce-velocity)))
+	    (set! ball-vel-x (car new-vel))
+	    (set! ball-vel-y (cadr new-vel)))))))
+
+(define (get-bounce-velocity)
+  (raise "Not implemented."))
 
 (define (critical-error . msgs)
   (apply println msgs)
@@ -142,7 +173,8 @@
 				  (if pressing-left 1 0)))))
     (set! paddle-x (+ paddle-x (* speed dt))))
   (check-ball-wall-collision)
-  (check-paddle-wall-collision))
+  (check-paddle-wall-collision)
+  (check-ball-paddle-collision))
 
 (define draw-circle
   (let ((num-divisions 32))
@@ -229,4 +261,4 @@
       (SDL_DestroyWindow win)
       (SDL_Quit))))
 
-(test)
+;(test)

@@ -9,5 +9,8 @@
 (define cos
   (c-lambda (double) double "cos"))
 
+(define sqrt
+  (c-lambda (double) double "sqrt"))
+
 (define M_PI
   ((c-lambda () double "___result = M_PI;")))
