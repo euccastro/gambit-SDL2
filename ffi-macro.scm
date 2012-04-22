@@ -1,16 +1,16 @@
 (c-declare #<<c-declare-end
+#include <malloc.h>
 
 ___SCMOBJ leave_alone(void *p)
 {
-    ___EXT(___set_data_rc)(p, 0);
-    p = NULL;
-    ___EXT(___release_rc)(p);
     return ___FIX(___NO_ERR);
 }
 
 c-declare-end
 )
 
+(define ffi-hierarchical-reference-table
+  (make-table weak-keys: #t weak-values: #f test: eq?))
 
 ; https://mercure.iro.umontreal.ca/pipermail/gambit-list/2009-August/003781.html
 (define-macro (at-expand-time-and-runtime . exprs)
@@ -55,7 +55,7 @@ c-declare-end
               names))))
 
 (at-expand-time
-  (define unmanaged-prefix "__um_")
+  (define unmanaged-prefix "unmanaged-")
   (define (c-native struct-or-union type . fields)
     (let* 
       ((scheme-type (if (pair? type) (car type) type))
@@ -102,28 +102,33 @@ c-declare-end
 					 unmanaged-prefix
 					 (symbol->string scheme-attr-type)))
                                        scheme-attr-type)))
-	     `(define (,(string->symbol 
-			 (string-append scheme-type-name 
-					"-" 
-					scheme-attr-name))
-		       parent)
-		(let ((ret
-		       ((c-lambda (,scheme-type) ,scheme-attr-type
-				  ,(string-append
-				    "___result" _voidstar
-				    ; XXX: correctly cast to type, should help with enums in C++.
-				    ;" = (" (symbol->string c-attr-type) ")"
-				    " = "
-				    amperstand "(((" c-type-name "*)___arg1_voidstar)->"
-				    c-attr-name ");"))
-			parent)))
-		  ,@(if voidstar
-			`(((c-lambda
-			    (,scheme-attr-type scheme-object) void
-			    "___EXT(___set_data_rc)(___arg1_voidstar, ___arg2);")
-			   ret parent))
-			'())
-		  ret))))))
+               `(define (,(string->symbol
+                            (string-append scheme-type-name
+                                           "-"
+                                           scheme-attr-name))
+                          parent)
+                  (let ((ret
+                          ((c-lambda
+                             (,scheme-type) ,scheme-attr-type
+                             ,(string-append
+                                "___result" _voidstar
+                                ; XXX: correctly cast to type, should help with enums in C++.
+                                ;" = (" (symbol->string c-attr-type) ")"
+                                " = "
+                                amperstand "(((" c-type-name
+                                "*)___arg1_voidstar)->"
+                                c-attr-name ");"))
+                           parent)))
+                    ,@(if voidstar
+                        '((table-set!
+                            ffi-hierarchical-reference-table ret parent)
+                          (make-will
+                            ret
+                            (lambda (x)
+                              (table-set!
+                                ffi-hierarchical-reference-table x))))
+                        '())
+                    ret))))))
        (mutator
          (attr-worker
            (lambda (scheme-attr-name c-attr-name scheme-attr-type c-attr-type 
@@ -168,8 +173,8 @@ c-declare-end
              (c-lambda () ,scheme-type
                        ,(string-append
                           "___result_voidstar = "
-                          "___EXT(___alloc_rc)(sizeof(" c-type-name "));")))
-           (define ,(string->symbol 
+                          "malloc(sizeof(" c-type-name "));")))
+           (define ,(string->symbol
                       (string-append scheme-type-name "-pointer"))
              ; Take pointer.
              (c-lambda (,scheme-type) (pointer ,scheme-type)
