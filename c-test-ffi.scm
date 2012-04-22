@@ -1,9 +1,20 @@
 ;   gsc -exe -o test-macro-struct~ -ld-options "-lm" test-macro-struct.scm
 ;   ./test-macro-struct~
 
-(declare (not proper-tail-calls))
+(declare (debug) (debug-environments) (not proper-tail-calls))
 
+(define-macro (assert expr)
+  `(if (not ,expr)
+     (begin
+       (println "Assertion failed: " (quote ,expr))
+       (step)
+       (println "OK, moving on..."))))
+
+; Test that ffi-macro.scm behaves well if included more than once.
 (include "ffi-macro.scm")
+(define old ffi-hierarchical-reference-table)
+(include "ffi-macro.scm")
+(assert (eq? ffi-hierarchical-reference-table old))
 
 (c-declare #<<c-declare-end
 

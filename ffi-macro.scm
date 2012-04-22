@@ -1,4 +1,8 @@
 (c-declare #<<c-declare-end
+
+#ifndef FFI_MACRO_LEAVE_ALONE
+#define FFI_MACRO_LEAVE_ALONE
+
 #include <malloc.h>
 
 ___SCMOBJ leave_alone(void *p)
@@ -6,11 +10,15 @@ ___SCMOBJ leave_alone(void *p)
     return ___FIX(___NO_ERR);
 }
 
+#endif
+
 c-declare-end
 )
 
 (define ffi-hierarchical-reference-table
-  (make-table weak-keys: #t weak-values: #f test: eq?))
+  (if (table? ffi-hierarchical-reference-table)
+      ffi-hierarchical-reference-table
+      (make-table weak-keys: #t weak-values: #f test: eq?)))
 
 ; https://mercure.iro.umontreal.ca/pipermail/gambit-list/2009-August/003781.html
 (define-macro (at-expand-time-and-runtime . exprs)
