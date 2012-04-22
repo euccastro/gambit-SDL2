@@ -7,6 +7,8 @@
 
 #include <math.h>
 
+typedef struct {___U32 i, j;} uint32pair;
+typedef struct {uint32pair p, q;} u32pp;
 typedef struct {float x, y;} vec2;
 typedef struct {vec2 a, b;} segment;
 typedef union {vec2 v; segment s;} vecseg;
@@ -31,6 +33,14 @@ void translate_segment(segment* s, vec2* v)
 
 c-declare-end
 )
+
+(c-struct  uint32pair
+          (i unsigned-int32)
+          (j unsigned-int32))
+
+(c-struct u32pp
+          (p uint32pair voidstar)
+          (q uint32pair voidstar))
 
 (c-struct vec2 (x float) (y float))
 (c-struct segment (a vec2 voidstar) (b vec2 voidstar))
@@ -91,19 +101,34 @@ c-declare-end
    ; goes away.
    (lambda ()
      (let* ((parent-released #f)
-	    (child-released #f)
+            (child-released #f)
             (parent (make-vecseg))
-	    (child (vecseg-v parent)))
-	 (make-will parent (lambda (blah) (set! parent-released #t)))
-	 (make-will child (lambda (blah) (set! child-released #t)))
-	 (set! parent #f)
-	 (gc-voodoo)
-	 (assert (not parent-released))
-	 (assert (not child-released))
-	 (set! child #f)
-	 (gc-voodoo)
-	 (assert child-released)
-	 (assert parent-released)))
+            (child (vecseg-v parent)))
+       (make-will parent (lambda (blah) (set! parent-released #t)))
+       (make-will child (lambda (blah) (set! child-released #t)))
+       (set! parent #f)
+       (gc-voodoo)
+       (assert (not parent-released))
+       (assert (not child-released))
+       (set! child #f)
+       (gc-voodoo)
+       (assert child-released)
+       (assert parent-released)))
+
+   (lambda ()
+     (let* ((parent (make-u32pp))
+            (pchild (u32pp-p parent))
+            (qchild (u32pp-q parent))
+            (qchild-released #f))
+       (uint32pair-i-set! pchild #xffff)
+       (uint32pair-j-set! pchild #xffff)
+       (make-will qchild (lambda (blah) (set! qchild-released #t)))
+       (set! qchild #f)
+       (gc-voodoo)
+       (assert qchild-released)
+       (assert (= (uint32pair-i pchild) #xffff))
+       (assert (= (uint32pair-j pchild) #xffff))))
+
    ))
 
 (define (gc-voodoo)
