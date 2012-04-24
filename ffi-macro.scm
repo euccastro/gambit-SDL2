@@ -205,3 +205,6 @@ c-declare-end
 (define-macro
   (c-union type . fields)
   (apply c-native 'union type fields))
+
+(namespace (""))
+(include "ffi-macro#.scm")

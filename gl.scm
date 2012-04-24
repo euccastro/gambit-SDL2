@@ -1,8 +1,6 @@
 ;; OpenGL
 
 (include "ffi-macro.scm")
-(##namespace (""))
-(include "ffi-macro#.scm")
 
 (c-declare "#include \"SDL_opengl.h\"")
 
