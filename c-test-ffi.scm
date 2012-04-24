@@ -1,7 +1,15 @@
-;   gsc -exe -o test-macro-struct~ -ld-options "-lm" test-macro-struct.scm
-;   ./test-macro-struct~
-
 (declare (debug) (debug-environments) (not proper-tail-calls))
+
+
+; Test that ffi-macro.scm behaves well if included more than once.
+; (asserted below for namespace management.)
+(include "ffi-macro.scm")
+(define test#old ffi#hierarchical-reference-table)
+(table-set! test#old 'test-key 'test-value)
+(include "ffi-macro.scm")
+
+(namespace (""))
+(include "ffi-macro#.scm")
 
 (define-macro (assert expr)
   `(if (not ,expr)
@@ -10,11 +18,9 @@
        (step)
        (println "OK, moving on..."))))
 
-; Test that ffi-macro.scm behaves well if included more than once.
-(include "ffi-macro.scm")
-(define old ffi-hierarchical-reference-table)
-(include "ffi-macro.scm")
-(assert (eq? ffi-hierarchical-reference-table old))
+(assert (eq? ffi#hierarchical-reference-table test#old))
+(assert (equal? (table-ref ffi#hierarchical-reference-table 'test-key)
+                'test-value))
 
 (c-declare #<<c-declare-end
 

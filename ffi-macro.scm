@@ -1,3 +1,7 @@
+(include "ffi-macro#.scm")
+(namespace ("ffi#"))
+(##include "~~/lib/gambit#.scm")
+
 (c-declare #<<c-declare-end
 
 #ifndef FFI_MACRO_LEAVE_ALONE
@@ -15,10 +19,10 @@ ___SCMOBJ leave_alone(void *p)
 c-declare-end
 )
 
-(define ffi-hierarchical-reference-table
-  (if (table? ffi-hierarchical-reference-table)
-      ffi-hierarchical-reference-table
-      (make-table weak-keys: #t weak-values: #f test: eq?)))
+(define hierarchical-reference-table
+  (if (table? hierarchical-reference-table)
+    hierarchical-reference-table
+    (make-table weak-keys: #t weak-values: #f test: eq?)))
 
 ; https://mercure.iro.umontreal.ca/pipermail/gambit-list/2009-August/003781.html
 (define-macro (at-expand-time-and-runtime . exprs)
@@ -129,12 +133,12 @@ c-declare-end
                            parent)))
                     ,@(if voidstar
                         '((table-set!
-                            ffi-hierarchical-reference-table ret parent)
+                            ffi#hierarchical-reference-table ret parent)
                           (make-will
                             ret
                             (lambda (x)
                               (table-set!
-                                ffi-hierarchical-reference-table x))))
+                                ffi#hierarchical-reference-table x))))
                         '())
                     ret))))))
        (mutator
