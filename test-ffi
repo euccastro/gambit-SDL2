@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 
-gsc-d -track-scheme -debug -link -flat -o c-test-ffi.o1.c c-test-ffi.scm \
-&& gsc-d -track-scheme -debug -cc-options "-D___DYNAMIC -O0 -g" -obj c-test-ffi.c c-test-ffi.o1.c \
+gsc -track-scheme -debug -link -flat -o c-test-ffi.o1.c c-test-ffi.scm \
+&& gsc -track-scheme -debug -cc-options "-D___DYNAMIC -O0 -g" -obj c-test-ffi.c c-test-ffi.o1.c \
 && gcc -shared c-test-ffi.o c-test-ffi.o1.o -o c-test-ffi.o1 \
 && gsi -:dar ./test-ffi.scm
 
