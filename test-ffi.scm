@@ -16,6 +16,7 @@
 
 (define tests
   (list
+
    ; Simplest test, make a vec2 and read its members.
    (lambda ()
      (let ((v (make-vec2))
@@ -25,15 +26,16 @@
        (vec2-y-set! v y)
        (assert (~ (vec2-x v) x))
        (assert (~ (vec2-y v) y))))
+
+   ; Check that by default a struct is released when it goes out of scope.
    (lambda ()
-     ; Check that by default a struct is released when it goes out of
-     ; scope.
      (let ((vs-released #f))
 	(let ((vs (make-vecseg)))
 	  (make-will vs (lambda (blah)
 			  (set! vs-released #t))))
 	(gc-voodoo)
 	(assert vs-released)))
+
    ; Check that a struct will no be released while a child holds a
    ; reference to it, but it will be released when the child itself
    ; goes away.
@@ -53,6 +55,7 @@
        (assert child-released)
        (assert parent-released)))
 
+   ; Check that writing to a struct member doesn't corrupt neighbour members.
    (lambda ()
      (let* ((parent (make-u32pp))
             (pchild (u32pp-p parent))
