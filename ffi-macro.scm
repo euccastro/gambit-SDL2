@@ -185,6 +185,9 @@ c-declare-end
                        ,(string-append
                           "___result_voidstar = "
                           "malloc(sizeof(" c-type-name "));")))
+           (define (,(string->symbol (string-append scheme-type-name "?")) x)
+             ; Type predicate.
+             (and (foreign? x) (memq (quote ,c-type) (foreign-tags x)) #t))
            (define ,(string->symbol
                       (string-append scheme-type-name "-pointer"))
              ; Take pointer.

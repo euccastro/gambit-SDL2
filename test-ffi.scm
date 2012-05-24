@@ -67,6 +67,16 @@
        (assert (= (uint32pair-i pchild) #xffff))
        (assert (= (uint32pair-j pchild) #xffff))))
 
+   ; Check that the type predicate returns #t only for objects of a given
+   ; struct/union type, and that it doesn't error when called with other
+   ; struct/union types, or with objects that are not structs or unions at
+   ; all.
+   (lambda ()
+     (let ((u (make-uint32pair))
+           (v (make-vec2)))
+       (assert (vec2? v))
+       (assert (not (vec2? u)))
+       (assert (not (vec2? 'not-a-vec2)))))
    ))
 
 (define (gc-voodoo)
