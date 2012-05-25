@@ -55,6 +55,24 @@
        (assert child-released)
        (assert parent-released)))
 
+   ; Check that a struct will no be released while a pointer holds a reference
+   ; to it, but it will be released when the pointer itself goes away.
+   (lambda ()
+     (let* ((struct-released #f)
+            (pointer-released #f)
+            (struct (make-vecseg))
+            (pointer (vecseg-pointer struct)))
+       (make-will struct (lambda (blah) (set! struct-released #t)))
+       (make-will pointer (lambda (blah) (set! pointer-released #t)))
+       (set! struct #f)
+       (gc-voodoo)
+       (assert (not struct-released))
+       (assert (not pointer-released))
+       (set! pointer #f)
+       (gc-voodoo)
+       (assert pointer-released)
+       (assert struct-released)))
+
    ; Check that writing to a struct member doesn't corrupt neighbour members.
    (lambda ()
      (let* ((parent (make-u32pp))

@@ -201,11 +201,15 @@ c-declare-end
                   (memq (quote ,pointer-type)
                         (foreign-tags x))
                   #t))
-           (define ,(symbol-append scheme-type "-pointer")
+           (define (,(symbol-append scheme-type "-pointer") x)
              ; Take pointer.
-             (c-lambda
-               (,scheme-type) ,pointer-type
-               "___result_voidstar = ___arg1_voidstar;"))
+             (let ((ret
+                     ((c-lambda
+                        (,scheme-type) ,pointer-type
+                        "___result_voidstar = ___arg1_voidstar;")
+                      x)))
+               (ffi#link x ret)
+               ret))
            (define ,(symbol-append "pointer->" scheme-type)
              ; Pointer dereference
              (c-lambda
