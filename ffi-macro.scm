@@ -4,13 +4,20 @@
 
 (c-declare #<<c-declare-end
 
-#ifndef FFI_MACRO_LEAVE_ALONE
-#define FFI_MACRO_LEAVE_ALONE
+#ifndef FFIMACRO
+#define FFIMACRO
 
 #include <malloc.h>
 
-___SCMOBJ leave_alone(void *p)
+___SCMOBJ ffimacro__leave_alone(void *p)
 {
+    return ___FIX(___NO_ERR);
+}
+
+___SCMOBJ ffimacro__free_foreign(void *p)
+{
+    if (p)
+        free(p);
     return ___FIX(___NO_ERR);
 }
 
@@ -172,13 +179,13 @@ c-declare-end
            (c-define-type ,scheme-type (,struct-or-union ,c-type-name ,c-type))
            ; Unmanaged version of structure.
            (c-define-type ,(symbol-append unmanaged-prefix scheme-type)
-                          (,struct-or-union ,c-type-name ,c-type "leave_alone"))
+                          (,struct-or-union ,c-type-name ,c-type "ffimacro__leave_alone"))
            (c-define-type
              ,pointer-type
              (pointer ,scheme-type ,pointer-type))
            (c-define-type
              ,(symbol-append managed-prefix pointer-type)
-             (pointer ,scheme-type ,pointer-type "free"))
+             (pointer ,scheme-type ,pointer-type "ffimacro__free_foreign"))
            (define ,(symbol-append "make-" scheme-type)
              ; Constructor.
              (c-lambda
