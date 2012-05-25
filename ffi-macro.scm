@@ -79,7 +79,6 @@ c-declare-end
     (let*
       ((scheme-type (if (pair? type) (car type) type))
        (c-type (if (pair? type) (cadr type) type))
-       (scheme-type-name (symbol->string scheme-type))
        (c-type-name (symbol->string c-type))
        (attr-worker
          (lambda (fn)
@@ -119,7 +118,7 @@ c-declare-end
                                        (symbol-append unmanaged-prefix
                                                       scheme-attr-type)
                                        scheme-attr-type)))
-               `(define (,(symbol-append scheme-type-name
+               `(define (,(symbol-append scheme-type
                                          "-"
                                          scheme-attr-name)
                           parent)
@@ -160,7 +159,7 @@ c-declare-end
                        (else "")))
                    (dereference (if voidstar "*" "")))
                `(define ,(symbol-append
-                           scheme-type-name "-" scheme-attr-name "-set!")
+                           scheme-type "-" scheme-attr-name "-set!")
                   (c-lambda (,scheme-type ,scheme-attr-type) void
                             ,(string-append
                                "(*("
@@ -177,24 +176,24 @@ c-declare-end
         `(begin
            (c-define-type ,scheme-type (,struct-or-union ,c-type-name ,c-type))
            ; Unmanaged version of structure.
-           (c-define-type ,(symbol-append unmanaged-prefix scheme-type-name)
+           (c-define-type ,(symbol-append unmanaged-prefix scheme-type)
                           (,struct-or-union ,c-type-name ,c-type "leave_alone"))
-           (c-define-type ,(symbol-append scheme-type-name "*")
+           (c-define-type ,(symbol-append scheme-type "*")
                           (pointer ,scheme-type))
-           (define ,(symbol-append "make-" scheme-type-name)
+           (define ,(symbol-append "make-" scheme-type)
              ; Constructor.
              (c-lambda () ,scheme-type
                        ,(string-append
                           "___result_voidstar = "
                           "malloc(sizeof(" c-type-name "));")))
-           (define (,(symbol-append scheme-type-name "?") x)
+           (define (,(symbol-append scheme-type "?") x)
              ; Type predicate.
              (and (foreign? x) (memq (quote ,c-type) (foreign-tags x)) #t))
-           (define ,(symbol-append scheme-type-name "-pointer")
+           (define ,(symbol-append scheme-type "-pointer")
              ; Take pointer.
              (c-lambda (,scheme-type) (pointer ,scheme-type)
                        "___result_voidstar = ___arg1_voidstar;"))
-           (define ,(symbol-append "pointer->" scheme-type-name)
+           (define ,(symbol-append "pointer->" scheme-type)
              ; Pointer dereference
              (c-lambda ((pointer ,scheme-type)) ,scheme-type
                        "___result_voidstar = ___arg1_voidstar;")))
