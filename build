@@ -1,17 +1,17 @@
 #!/usr/bin/env sh
 
-gsc-d -track-scheme -debug -link -flat -o math.o1.c math.scm \
-&& gsc-d -track-scheme -keep-c -debug -cc-options "-D___DYNAMIC -O0 -g" -obj math.c math.o1.c \
+gsc -track-scheme -debug -link -flat -o math.o1.c math.scm \
+&& gsc -track-scheme -keep-c -debug -cc-options "-D___DYNAMIC -O0 -g" -obj math.c math.o1.c \
 && gcc -shared math.o math.o1.o -lm -o math.o1
 
-gsc-d -track-scheme -debug -link -flat -o ffi.o1.c ffi.scm \
-&& gsc-d -track-scheme -keep-c -debug -cc-options "-D___DYNAMIC -O0 -g" -obj ffi.c ffi.o1.c \
+gsc -track-scheme -debug -link -flat -o ffi.o1.c ffi.scm \
+&& gsc -track-scheme -keep-c -debug -cc-options "-D___DYNAMIC -O0 -g" -obj ffi.c ffi.o1.c \
 && gcc -shared ffi.o ffi.o1.o -o ffi.o1
 
-gsc-d -track-scheme -debug -link -flat -o sdl.o1.c sdl.scm \
-&& gsc-d -track-scheme -keep-c -debug -cc-options "-D___DYNAMIC -O0 -g" -obj sdl.c sdl.o1.c \
+gsc -track-scheme -debug -link -flat -o sdl.o1.c sdl.scm \
+&& gsc -track-scheme -keep-c -debug -cc-options "-D___DYNAMIC -O0 -g" -obj sdl.c sdl.o1.c \
 && gcc -shared sdl.o sdl.o1.o -lSDL2 -o sdl.o1
 
-gsc-d -track-scheme -debug -link -flat -o gl.o1.c gl.scm \
-&& gsc-d -track-scheme -keep-c -debug -cc-options "-D___DYNAMIC -O0 -g" -obj gl.c gl.o1.c \
+gsc -track-scheme -debug -link -flat -o gl.o1.c gl.scm \
+&& gsc -track-scheme -keep-c -debug -cc-options "-D___DYNAMIC -O0 -g" -obj gl.c gl.o1.c \
 && gcc -shared gl.o gl.o1.o -lGL -o gl.o1
