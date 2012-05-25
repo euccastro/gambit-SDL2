@@ -74,10 +74,12 @@ c-declare-end
   (define (mixed-append . args) (apply string-append (map to-string args)))
   (define (symbol-append . args)
     (string->symbol (apply mixed-append args)))
+  (define managed-prefix "managed-")
   (define unmanaged-prefix "unmanaged-")
   (define (c-native struct-or-union type . fields)
     (let*
       ((scheme-type (if (pair? type) (car type) type))
+       (pointer-type (symbol-append scheme-type "*"))
        (c-type (if (pair? type) (cadr type) type))
        (c-type-name (symbol->string c-type))
        (attr-worker
@@ -171,8 +173,12 @@ c-declare-end
            ; Unmanaged version of structure.
            (c-define-type ,(symbol-append unmanaged-prefix scheme-type)
                           (,struct-or-union ,c-type-name ,c-type "leave_alone"))
-           (c-define-type ,(symbol-append scheme-type "*")
-                          (pointer ,scheme-type))
+           (c-define-type
+             ,pointer-type
+             (pointer ,scheme-type ,pointer-type))
+           (c-define-type
+             ,(symbol-append managed-prefix pointer-type)
+             (pointer ,scheme-type ,pointer-type "free"))
            (define ,(symbol-append "make-" scheme-type)
              ; Constructor.
              (c-lambda
@@ -184,26 +190,24 @@ c-declare-end
            (define (,(symbol-append scheme-type "-pointer?") x)
              ; Pointer type predicate.
              (and (foreign? x)
-                  (memq (quote ,(symbol-append "struct " c-type "*"))
+                  (memq (quote ,pointer-type)
                         (foreign-tags x))
                   #t))
            (define ,(symbol-append scheme-type "-pointer")
              ; Take pointer.
              (c-lambda
-               (,scheme-type) (pointer ,scheme-type)
+               (,scheme-type) ,pointer-type
                "___result_voidstar = ___arg1_voidstar;"))
            (define ,(symbol-append "pointer->" scheme-type)
              ; Pointer dereference
              (c-lambda
-               ((pointer ,scheme-type)) ,scheme-type
+               (,pointer-type) ,scheme-type
                "___result_voidstar = ___arg1_voidstar;"))
-           (define (,(symbol-append "make-" scheme-type "-array") len)
-             (let ((ret ((c-lambda
-                           (int) (pointer ,scheme-type)
-                           ,(string-append
-                             "___result_voidstar = malloc(___arg1 * sizeof(" c-type-name "));"))
-                         len)))
-               ret)))
+           (define ,(symbol-append "make-" scheme-type "-array")
+             (c-lambda
+               (int) ,(symbol-append managed-prefix pointer-type)
+               ,(string-append
+                  "___result_voidstar = malloc(___arg1 * sizeof(" c-type-name "));"))))
         (map accessor fields)
         (map mutator fields)))))
 

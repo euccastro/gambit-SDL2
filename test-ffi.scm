@@ -93,8 +93,15 @@
 
    ; Check that we can make an array of a structure.
    (lambda ()
-     (let ((a (make-vec2-array 5)))
-       (assert (vec2-pointer? a))))
+     (let ((a (make-vec2-array 5))
+           (a-released #f))
+       (assert (vec2-pointer? a))
+       ; Check that the array gets released when the last Scheme reference is
+       ; lost.
+       (make-will a (lambda (x) (set! a-released #t)))
+       (set! a #f)
+       (gc-voodoo)
+       (assert a-released)))
    ))
 
 (define (gc-voodoo)
