@@ -160,18 +160,11 @@ c-declare-end
                    (dereference (if voidstar "*" "")))
                `(define ,(symbol-append
                            scheme-type "-" scheme-attr-name "-set!")
-                  (c-lambda (,scheme-type ,scheme-attr-type) void
-                            ,(string-append
-                               "(*("
-                               c-type-name
-                               "*)___arg1_voidstar)."
-                               c-attr-name
-                               " = "
-                               dereference
-                               cast
-                               "___arg2"
-                               _voidstar
-                               ";"))))))))
+                  (c-lambda
+                    (,scheme-type ,scheme-attr-type) void
+                    ,(string-append
+                       "(*(" c-type-name "*)___arg1_voidstar)." c-attr-name
+                       " = " dereference cast "___arg2" _voidstar ";"))))))))
       (append
         `(begin
            (c-define-type ,scheme-type (,struct-or-union ,c-type-name ,c-type))
@@ -182,21 +175,22 @@ c-declare-end
                           (pointer ,scheme-type))
            (define ,(symbol-append "make-" scheme-type)
              ; Constructor.
-             (c-lambda () ,scheme-type
-                       ,(string-append
-                          "___result_voidstar = "
-                          "malloc(sizeof(" c-type-name "));")))
+             (c-lambda
+               () ,scheme-type
+               ,(string-append "___result_voidstar = malloc(sizeof(" c-type-name "));")))
            (define (,(symbol-append scheme-type "?") x)
              ; Type predicate.
              (and (foreign? x) (memq (quote ,c-type) (foreign-tags x)) #t))
            (define ,(symbol-append scheme-type "-pointer")
              ; Take pointer.
-             (c-lambda (,scheme-type) (pointer ,scheme-type)
-                       "___result_voidstar = ___arg1_voidstar;"))
+             (c-lambda
+               (,scheme-type) (pointer ,scheme-type)
+               "___result_voidstar = ___arg1_voidstar;"))
            (define ,(symbol-append "pointer->" scheme-type)
              ; Pointer dereference
-             (c-lambda ((pointer ,scheme-type)) ,scheme-type
-                       "___result_voidstar = ___arg1_voidstar;")))
+             (c-lambda
+               ((pointer ,scheme-type)) ,scheme-type
+               "___result_voidstar = ___arg1_voidstar;"))
         (map accessor fields)
         (map mutator fields)))))
 
