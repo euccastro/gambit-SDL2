@@ -4,7 +4,7 @@
 ; Test that ffi-macro.scm behaves well if included more than once
 ; (asserted below definition of |assert| due to namespace requirements.)
 (include "ffi-macro.scm")
-(define test#old ffi#hierarchical-reference-table)
+(define test#old ffi#references)
 (table-set! test#old 'test-key 'test-value)
 (include "ffi-macro.scm")
 
@@ -15,8 +15,8 @@
        (step)
        (println "OK, moving on..."))))
 
-(assert (eq? ffi#hierarchical-reference-table test#old))
-(assert (equal? (table-ref ffi#hierarchical-reference-table 'test-key)
+(assert (eq? ffi#references test#old))
+(assert (equal? (table-ref ffi#references 'test-key)
                 'test-value))
 
 (c-declare #<<c-declare-end

@@ -26,10 +26,17 @@ ___SCMOBJ ffimacro__free_foreign(void *p)
 c-declare-end
 )
 
-(define hierarchical-reference-table
-  (if (table? hierarchical-reference-table)
-    hierarchical-reference-table
+(define references
+  (if (table? references)
+    references
     (make-table weak-keys: #t weak-values: #f test: eq?)))
+
+(define link
+  (if (procedure? link)
+    link
+    (lambda (parent child)
+      (table-set! references child parent)
+      (make-will child (lambda (x) (table-set! references x))))))
 
 ; https://mercure.iro.umontreal.ca/pipermail/gambit-list/2009-August/003781.html
 (define-macro (at-expand-time-and-runtime . exprs)
@@ -144,13 +151,7 @@ c-declare-end
                                 c-attr-name ");"))
                            parent)))
                     ,@(if voidstar
-                        '((table-set!
-                            ffi#hierarchical-reference-table ret parent)
-                          (make-will
-                            ret
-                            (lambda (x)
-                              (table-set!
-                                ffi#hierarchical-reference-table x))))
+                        '((ffi#link parent ret))
                         '())
                     ret))))))
        (mutator
