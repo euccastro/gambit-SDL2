@@ -70,16 +70,26 @@
        (assert (= (uint32pair-i pchild) #xffff))
        (assert (= (uint32pair-j pchild) #xffff))))
 
-   ; Check that the type predicate returns #t only for objects of a given
-   ; struct/union type, and that it doesn't error when called with other
-   ; struct/union types, or with objects that are not structs or unions at
-   ; all.
+   ; Struct and pointer type predicates.
    (lambda ()
-     (let ((u (make-uint32pair))
-           (v (make-vec2)))
+     (let* ((u (make-uint32pair))
+            (u* (uint32pair-pointer u))
+            (v (make-vec2))
+            (v* (vec2-pointer v)))
+       ; Struct predicate returns #t for objects of the same type.
        (assert (vec2? v))
+       ; Pointer predicate returns #t for pointers to this object.
+       (assert (vec2-pointer? v*))
+       ; Struct and pointer predicates don't recognize each other's targets.
+       (assert (not (vec2-pointer? v)))
+       (assert (not (vec2? v*)))
+       ; Instances and pointers of other types are not recognized.
        (assert (not (vec2? u)))
-       (assert (not (vec2? 'not-a-vec2)))))
+       (assert (not (vec2-pointer? u*)))
+       ; Objects that are not instances or pointers at all are not recognized,
+       ; and checking them causes no errors.
+       (assert (not (vec2? 'not-a-vec2)))
+       (assert (not (vec2-pointer? 'not-a-vec2-pointer)))))
    ))
 
 (define (gc-voodoo)

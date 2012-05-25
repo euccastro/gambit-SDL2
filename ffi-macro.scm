@@ -181,6 +181,12 @@ c-declare-end
            (define (,(symbol-append scheme-type "?") x)
              ; Type predicate.
              (and (foreign? x) (memq (quote ,c-type) (foreign-tags x)) #t))
+           (define (,(symbol-append scheme-type "-pointer?") x)
+             ; Pointer type predicate.
+             (and (foreign? x)
+                  (memq (quote ,(symbol-append "struct " c-type "*"))
+                        (foreign-tags x))
+                  #t))
            (define ,(symbol-append scheme-type "-pointer")
              ; Take pointer.
              (c-lambda
