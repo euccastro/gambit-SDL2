@@ -67,6 +67,13 @@ c-declare-end
               names))))
 
 (at-expand-time
+  (define (to-string x)
+    (cond ((string? x) x)
+          ((symbol? x) (symbol->string x))
+          (else (error "Unsupported type: " x))))
+  (define (mixed-append . args) (apply string-append (map to-string args)))
+  (define (symbol-append . args)
+    (string->symbol (apply mixed-append args)))
   (define unmanaged-prefix "unmanaged-")
   (define (c-native struct-or-union type . fields)
     (let*
@@ -109,15 +116,12 @@ c-declare-end
              (let ((_voidstar (if (or voidstar pointer) "_voidstar" ""))
                    (amperstand (if voidstar "&" ""))
                    (scheme-attr-type (if voidstar
-                                       (string->symbol
-                                         (string-append
-                                           unmanaged-prefix
-                                           (symbol->string scheme-attr-type)))
+                                       (symbol-append unmanaged-prefix
+                                                      scheme-attr-type)
                                        scheme-attr-type)))
-               `(define (,(string->symbol
-                            (string-append scheme-type-name
-                                           "-"
-                                           scheme-attr-name))
+               `(define (,(symbol-append scheme-type-name
+                                         "-"
+                                         scheme-attr-name)
                           parent)
                   (let ((ret
                           ((c-lambda
@@ -149,15 +153,14 @@ c-declare-end
                    (cast
                      (cond
                        (voidstar
-                         (string-append "(" (symbol->string c-attr-type) "*)"))
+                         (mixed-append "(" c-attr-type "*)"))
                        (pointer
-                         (string-append "(" (symbol->string c-attr-type) ")"))
+                         (mixed-append "(" c-attr-type ")"))
                        ; XXX: cast primitive types too, should help with enums in C++
                        (else "")))
                    (dereference (if voidstar "*" "")))
-               `(define ,(string->symbol
-                           (string-append
-                             scheme-type-name "-" scheme-attr-name "-set!"))
+               `(define ,(symbol-append
+                           scheme-type-name "-" scheme-attr-name "-set!")
                   (c-lambda (,scheme-type ,scheme-attr-type) void
                             ,(string-append
                                "(*("
@@ -174,27 +177,24 @@ c-declare-end
         `(begin
            (c-define-type ,scheme-type (,struct-or-union ,c-type-name ,c-type))
            ; Unmanaged version of structure.
-           (c-define-type ,(string->symbol
-                             (string-append unmanaged-prefix scheme-type-name))
+           (c-define-type ,(symbol-append unmanaged-prefix scheme-type-name)
                           (,struct-or-union ,c-type-name ,c-type "leave_alone"))
-           (c-define-type ,(string->symbol (string-append scheme-type-name "*"))
+           (c-define-type ,(symbol-append scheme-type-name "*")
                           (pointer ,scheme-type))
-           (define ,(string->symbol (string-append "make-" scheme-type-name))
+           (define ,(symbol-append "make-" scheme-type-name)
              ; Constructor.
              (c-lambda () ,scheme-type
                        ,(string-append
                           "___result_voidstar = "
                           "malloc(sizeof(" c-type-name "));")))
-           (define (,(string->symbol (string-append scheme-type-name "?")) x)
+           (define (,(symbol-append scheme-type-name "?") x)
              ; Type predicate.
              (and (foreign? x) (memq (quote ,c-type) (foreign-tags x)) #t))
-           (define ,(string->symbol
-                      (string-append scheme-type-name "-pointer"))
+           (define ,(symbol-append scheme-type-name "-pointer")
              ; Take pointer.
              (c-lambda (,scheme-type) (pointer ,scheme-type)
                        "___result_voidstar = ___arg1_voidstar;"))
-           (define ,(string->symbol
-                      (string-append "pointer->" scheme-type-name))
+           (define ,(symbol-append "pointer->" scheme-type-name)
              ; Pointer dereference
              (c-lambda ((pointer ,scheme-type)) ,scheme-type
                        "___result_voidstar = ___arg1_voidstar;")))
