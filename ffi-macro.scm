@@ -210,11 +210,15 @@ c-declare-end
                       x)))
                (ffi#link x ret)
                ret))
-           (define ,(symbol-append "pointer->" scheme-type)
+           (define (,(symbol-append "pointer->" scheme-type) x)
              ; Pointer dereference
-             (c-lambda
-               (,pointer-type) ,scheme-type
-               "___result_voidstar = ___arg1_voidstar;"))
+             (let ((ret
+                     ((c-lambda
+                        (,pointer-type) ,(symbol-append unmanaged-prefix scheme-type)
+                        "___result_voidstar = ___arg1_voidstar;")
+                      x)))
+               (ffi#link x ret)
+               ret))
            (define ,(symbol-append "make-" scheme-type "-array")
              (c-lambda
                (int) ,(symbol-append managed-prefix pointer-type)

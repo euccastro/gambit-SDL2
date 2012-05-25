@@ -73,6 +73,25 @@
        (assert pointer-released)
        (assert struct-released)))
 
+   ; Check that a pointer will no be released while a dereferenced struct
+   ; holds a reference to it, but it will be released when said struct goes
+   ; away.
+   (lambda ()
+     (let* ((array-released #f)
+            (struct-released #f)
+            (array (make-vecseg-array 3))
+            (struct (pointer->vecseg array)))
+       (make-will array (lambda (blah) (set! array-released #t)))
+       (make-will struct (lambda (blah) (set! struct-released #t)))
+       (set! array #f)
+       (gc-voodoo)
+       (assert (not array-released))
+       (assert (not struct-released))
+       (set! struct #f)
+       (gc-voodoo)
+       (assert struct-released)
+       (assert array-released)))
+
    ; Check that writing to a struct member doesn't corrupt neighbour members.
    (lambda ()
      (let* ((parent (make-u32pp))
@@ -109,7 +128,7 @@
        (assert (not (vec2? 'not-a-vec2)))
        (assert (not (vec2-pointer? 'not-a-vec2-pointer)))))
 
-   ; Check that we can make an array of a structure.
+   ; Arrays of structures.
    (lambda ()
      (let ((a (make-vec2-array 5))
            (a-released #f))
