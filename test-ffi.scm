@@ -36,9 +36,8 @@
 	(gc-voodoo)
 	(assert vs-released)))
 
-   ; Check that a struct will no be released while a child holds a
-   ; reference to it, but it will be released when the child itself
-   ; goes away.
+   ; Check that a struct will not be released while a child holds a reference
+   ; to it, but it will be released when the child itself goes away.
    (lambda ()
      (let* ((parent-released #f)
             (child-released #f)
@@ -55,8 +54,9 @@
        (assert child-released)
        (assert parent-released)))
 
-   ; Check that a struct will no be released while a pointer holds a reference
-   ; to it, but it will be released when the pointer itself goes away.
+   ; Check that a struct will not be released while a pointer holds
+   ; a reference to it, but it will be released when the pointer itself goes
+   ; away.
    (lambda ()
      (let* ((struct-released #f)
             (pointer-released #f)
@@ -73,7 +73,7 @@
        (assert pointer-released)
        (assert struct-released)))
 
-   ; Check that a pointer will no be released while a dereferenced struct
+   ; Check that a pointer will not be released while a dereferenced struct
    ; holds a reference to it, but it will be released when said struct goes
    ; away.
    (lambda ()
@@ -90,6 +90,25 @@
        (set! struct #f)
        (gc-voodoo)
        (assert struct-released)
+       (assert array-released)))
+
+   ; Check that a pointer will not be released while there a relative pointer
+   ; holds a reference to it, but it will be released when said pointer goes
+   ; away.
+   (lambda ()
+     (let* ((array-released #f)
+            (relative-released #f)
+            (array (make-vecseg-array 3))
+            (relative (vecseg-pointer-offset array 1)))
+       (make-will array (lambda (blah) (set! array-released #t)))
+       (make-will relative (lambda (blah) (set! relative-released #t)))
+       (set! array #f)
+       (gc-voodoo)
+       (assert (not array-released))
+       (assert (not relative-released))
+       (set! relative #f)
+       (gc-voodoo)
+       (assert relative-released)
        (assert array-released)))
 
    ; Check that writing to a struct member doesn't corrupt neighbour members.
@@ -128,16 +147,29 @@
        (assert (not (vec2? 'not-a-vec2)))
        (assert (not (vec2-pointer? 'not-a-vec2-pointer)))))
 
-   ; Arrays of structures.
+   ; Arrays and offsets.
    (lambda ()
-     (let ((a (make-vec2-array 5))
-           (a-released #f))
+     (let* ((a (make-vec2-array 5))
+            (a3 (vec2-pointer-offset a 3))
+            (a0 (vec2-pointer-offset a3 -3))
+            (v (pointer->vec2 a))
+            (v3 (pointer->vec2 a3))
+            (v0 (pointer->vec2 a0))
+            (a-released #f))
        (assert (vec2-pointer? a))
+       (vec2-x-set! v 4.0)
+       (assert (~ (vec2-x v0) 4))
        ; Check that the array gets released when the last Scheme reference is
        ; lost.
        (make-will a (lambda (x) (set! a-released #t)))
        (set! a #f)
+       (set! a3 #f)
+       (set! a0 #f)
+       (set! v #f)
+       (set! v3 #f)
+       (set! v0 #f)
        (gc-voodoo)
+       (gc-voodoo)  ; lots of references to forget here...
        (assert a-released)))
    ))
 

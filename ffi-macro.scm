@@ -223,7 +223,15 @@ c-declare-end
              (c-lambda
                (int) ,(symbol-append managed-prefix pointer-type)
                ,(string-append
-                  "___result_voidstar = malloc(___arg1 * sizeof(" c-type-name "));"))))
+                  "___result_voidstar = malloc(___arg1 * sizeof(" c-type-name "));")))
+           (define (,(symbol-append scheme-type "-pointer-offset") p i)
+             (let ((ret
+                     ((c-lambda
+                       (,pointer-type int) ,pointer-type
+                       ,(string-append "___result_voidstar = (" c-type-name "*)___arg1_voidstar + ___arg2;"))
+                      p i)))
+               (ffi#link p ret)
+               ret)))
         (map accessor fields)
         (map mutator fields)))))
 
