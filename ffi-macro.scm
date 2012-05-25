@@ -197,6 +197,13 @@ c-declare-end
              (c-lambda
                ((pointer ,scheme-type)) ,scheme-type
                "___result_voidstar = ___arg1_voidstar;"))
+           (define (,(symbol-append "make-" scheme-type "-array") len)
+             (let ((ret ((c-lambda
+                           (int) (pointer ,scheme-type)
+                           ,(string-append
+                             "___result_voidstar = malloc(___arg1 * sizeof(" c-type-name "));"))
+                         len)))
+               ret)))
         (map accessor fields)
         (map mutator fields)))))
 

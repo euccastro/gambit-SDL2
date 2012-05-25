@@ -90,6 +90,11 @@
        ; and checking them causes no errors.
        (assert (not (vec2? 'not-a-vec2)))
        (assert (not (vec2-pointer? 'not-a-vec2-pointer)))))
+
+   ; Check that we can make an array of a structure.
+   (lambda ()
+     (let ((a (make-vec2-array 5)))
+       (assert (vec2-pointer? a))))
    ))
 
 (define (gc-voodoo)
